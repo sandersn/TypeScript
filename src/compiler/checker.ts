@@ -4050,11 +4050,12 @@ namespace ts {
         function getTypeFromClassOrInterfaceReference(node: TypeReferenceNode | ExpressionWithTypeArguments, symbol: Symbol): Type {
             let type = <InterfaceType>getDeclaredTypeOfSymbol(symbol);
             let typeParameters = type.localTypeParameters;
-            if (typeParameters) {
-                if (!node.typeArguments || node.typeArguments.length !== typeParameters.length) {
-                    error(node, Diagnostics.Generic_type_0_requires_1_type_argument_s, typeToString(type, /*enclosingDeclaration*/ undefined, TypeFormatFlags.WriteArrayAsGenericType), typeParameters.length);
-                    return unknownType;
-                }
+            if (type.localTypeParameters && (!node.typeArguments || node.typeArguments.length !== type.localTypeParameters.length)) {
+                error(node, Diagnostics.Generic_type_0_requires_1_type_argument_s, typeToString(type, /*enclosingDeclaration*/ undefined, TypeFormatFlags.WriteArrayAsGenericType), typeParameters.length);
+                return unknownType;
+            }
+            // TODO: This probably won't actually fix the problem. Might though.
+            if(type.localTypeParameters || type.outerTypeParameters) {
                 // In a type reference, the outer type parameters of the referenced class or interface are automatically
                 // supplied as type arguments and the type reference only specifies arguments for the local type parameters
                 // of the class or interface.
