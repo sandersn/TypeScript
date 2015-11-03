@@ -507,6 +507,7 @@ namespace ts {
     }
 
     export interface TypeParameterDeclaration extends Declaration {
+        dotDotDotToken?: Node;              // Present on tuple kind
         name: Identifier;
         constraint?: TypeNode;
 

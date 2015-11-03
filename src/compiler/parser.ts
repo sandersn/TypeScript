@@ -1211,7 +1211,7 @@ namespace ts {
                 case ParsingContext.ArrayBindingElements:
                     return token === SyntaxKind.CommaToken || token === SyntaxKind.DotDotDotToken || isIdentifierOrPattern();
                 case ParsingContext.TypeParameters:
-                    return isIdentifier();
+                    return isIdentifier() || token === SyntaxKind.DotDotDotToken;
                 case ParsingContext.ArgumentExpressions:
                 case ParsingContext.ArrayLiteralMembers:
                     return token === SyntaxKind.CommaToken || token === SyntaxKind.DotDotDotToken || isStartOfExpression();
@@ -1922,6 +1922,9 @@ namespace ts {
         // TYPES
 
         function parseTypeReferenceOrTypePredicate(): TypeReferenceNode | TypePredicateNode {
+            // TODO: Actually do something with this
+            // TODO: Can't have `is` or type arguments after ..., maybe that should go there.
+            const ignored = parseOptionalToken(SyntaxKind.DotDotDotToken);
             let typeName = parseEntityName(/*allowReservedWords*/ false, Diagnostics.Type_expected);
             if (typeName.kind === SyntaxKind.Identifier && token === SyntaxKind.IsKeyword && !scanner.hasPrecedingLineBreak()) {
                 nextToken();
@@ -1947,6 +1950,9 @@ namespace ts {
 
         function parseTypeParameter(): TypeParameterDeclaration {
             let node = <TypeParameterDeclaration>createNode(SyntaxKind.TypeParameter);
+            // TODO: if dotDotDotToken is parsed, then you can't specify constraints.
+            // (kinds don't have any constraints right now)
+            node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
             node.name = parseIdentifier();
             if (parseOptional(SyntaxKind.ExtendsKeyword)) {
                 // It's not uncommon for people to write improper constraints to a generic.  If the
