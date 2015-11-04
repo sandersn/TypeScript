@@ -1,0 +1,10 @@
+tests/cases/compiler/tupleKinds.ts(1,22): error TS2370: A rest parameter must be of an array type.
+
+
+==== tests/cases/compiler/tupleKinds.ts (1 errors) ====
+    function tuple<...T>(...args:...T) {
+                         ~~~~~~~~~~~~
+!!! error TS2370: A rest parameter must be of an array type.
+        return args;
+    }
+    
