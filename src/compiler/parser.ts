@@ -54,7 +54,8 @@ namespace ts {
                 return visitNode(cbNode, (<QualifiedName>node).left) ||
                     visitNode(cbNode, (<QualifiedName>node).right);
             case SyntaxKind.TypeParameter:
-                return visitNode(cbNode, (<TypeParameterDeclaration>node).name) ||
+                return visitNode(cbNode, (<TypeParameterDeclaration>node).dotDotDotToken) ||
+                    visitNode(cbNode, (<TypeParameterDeclaration>node).name) ||
                     visitNode(cbNode, (<TypeParameterDeclaration>node).constraint) ||
                     visitNode(cbNode, (<TypeParameterDeclaration>node).expression);
             case SyntaxKind.ShorthandPropertyAssignment:
@@ -107,7 +108,8 @@ namespace ts {
                     visitNode(cbNode, (<ArrowFunction>node).equalsGreaterThanToken) ||
                     visitNode(cbNode, (<FunctionLikeDeclaration>node).body);
             case SyntaxKind.TypeReference:
-                return visitNode(cbNode, (<TypeReferenceNode>node).typeName) ||
+                return visitNode(cbNode, (<TypeReferenceNode>node).dotDotDotToken) ||
+                    visitNode(cbNode, (<TypeReferenceNode>node).typeName) ||
                     visitNodes(cbNodes, (<TypeReferenceNode>node).typeArguments);
             case SyntaxKind.TypePredicate:
                 return visitNode(cbNode, (<TypePredicateNode>node).parameterName) ||
@@ -1922,10 +1924,15 @@ namespace ts {
         // TYPES
 
         function parseTypeReferenceOrTypePredicate(): TypeReferenceNode | TypePredicateNode {
-            // TODO: Actually do something with this
-            // TODO: Can't have `is` or type arguments after ..., maybe that should go there.
-            const ignored = parseOptionalToken(SyntaxKind.DotDotDotToken);
+            let dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
             let typeName = parseEntityName(/*allowReservedWords*/ false, Diagnostics.Type_expected);
+            if (dotDotDotToken) {
+                // tuple kinds can't have predicates or arguments, so return immediately
+                let node = <TypeReferenceNode>createNode(SyntaxKind.TypeReference, dotDotDotToken.pos);
+                node.typeName = typeName;
+                node.dotDotDotToken = dotDotDotToken;
+                return finishNode(node);
+            }
             if (typeName.kind === SyntaxKind.Identifier && token === SyntaxKind.IsKeyword && !scanner.hasPrecedingLineBreak()) {
                 nextToken();
                 let node = <TypePredicateNode>createNode(SyntaxKind.TypePredicate, typeName.pos);
@@ -1950,10 +1957,12 @@ namespace ts {
 
         function parseTypeParameter(): TypeParameterDeclaration {
             let node = <TypeParameterDeclaration>createNode(SyntaxKind.TypeParameter);
-            // TODO: if dotDotDotToken is parsed, then you can't specify constraints.
-            // (kinds don't have any constraints right now)
             node.dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
             node.name = parseIdentifier();
+            if (node.dotDotDotToken) {
+                // tuple kinds do not have constraints, so finish immediately
+                return finishNode(node);
+            }
             if (parseOptional(SyntaxKind.ExtendsKeyword)) {
                 // It's not uncommon for people to write improper constraints to a generic.  If the
                 // user writes a constraint that is an expression and not an actual type, then parse

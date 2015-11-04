@@ -663,6 +663,7 @@ namespace ts {
     }
 
     export interface TypeReferenceNode extends TypeNode {
+        dotDotDotToken?: Node,
         typeName: EntityName;
         typeArguments?: NodeArray<TypeNode>;
     }
