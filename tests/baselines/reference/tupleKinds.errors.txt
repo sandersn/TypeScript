@@ -1,10 +1,52 @@
 tests/cases/compiler/tupleKinds.ts(1,22): error TS2370: A rest parameter must be of an array type.
+tests/cases/compiler/tupleKinds.ts(4,44): error TS1144: '{' or ';' expected.
+tests/cases/compiler/tupleKinds.ts(4,44): error TS2304: Cannot find name 'is'.
+tests/cases/compiler/tupleKinds.ts(4,47): error TS1005: ';' expected.
+tests/cases/compiler/tupleKinds.ts(4,47): error TS2304: Cannot find name 'boolean'.
+tests/cases/compiler/tupleKinds.ts(4,55): error TS1005: ';' expected.
+tests/cases/compiler/tupleKinds.ts(6,45): error TS1144: '{' or ';' expected.
+tests/cases/compiler/tupleKinds.ts(6,46): error TS2304: Cannot find name 'U'.
+tests/cases/compiler/tupleKinds.ts(8,29): error TS1005: '>' expected.
+tests/cases/compiler/tupleKinds.ts(8,37): error TS2304: Cannot find name 'string'.
+tests/cases/compiler/tupleKinds.ts(8,45): error TS1109: Expression expected.
+tests/cases/compiler/tupleKinds.ts(8,48): error TS2304: Cannot find name 'args'.
+tests/cases/compiler/tupleKinds.ts(8,52): error TS1005: ';' expected.
 
 
-==== tests/cases/compiler/tupleKinds.ts (1 errors) ====
-    function tuple<...T>(...args:...T) {
+==== tests/cases/compiler/tupleKinds.ts (13 errors) ====
+    function tuple<...T>(...args:...T): ...T {
                          ~~~~~~~~~~~~
 !!! error TS2370: A rest parameter must be of an array type.
         return args;
+    }
+    function noPredicates<...T>(...args): ...T is boolean {
+                                               ~~
+!!! error TS1144: '{' or ';' expected.
+                                               ~~
+!!! error TS2304: Cannot find name 'is'.
+                                                  ~~~~~~~
+!!! error TS1005: ';' expected.
+                                                  ~~~~~~~
+!!! error TS2304: Cannot find name 'boolean'.
+                                                          ~
+!!! error TS1005: ';' expected.
+    }
+    function noArguments<...T, U>(...args): ...T<U> {
+                                                ~
+!!! error TS1144: '{' or ';' expected.
+                                                 ~
+!!! error TS2304: Cannot find name 'U'.
+    }
+    function noConstraints<...T extends string>(...args) {
+                                ~~~~~~~
+!!! error TS1005: '>' expected.
+                                        ~~~~~~
+!!! error TS2304: Cannot find name 'string'.
+                                                ~~~
+!!! error TS1109: Expression expected.
+                                                   ~~~~
+!!! error TS2304: Cannot find name 'args'.
+                                                       ~
+!!! error TS1005: ';' expected.
     }
     
