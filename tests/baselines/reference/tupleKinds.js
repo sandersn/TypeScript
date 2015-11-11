@@ -2,13 +2,10 @@
 function tuple<...T>(...args:...T): ...T {
     return args;
 }
-function noPredicates<...T>(...args): ...T is boolean {
-}
-function noArguments<...T, U>(...args): ...T<U> {
-}
-function noConstraints<...T extends string>(...args) {
-}
 
+class C { }
+let inferred = tuple(1, "foo", false, new C());
+let match: [number, string, boolean, C] = tuple(1, "foo", false, new C());
 
 //// [tupleKinds.js]
 function tuple() {
@@ -18,12 +15,10 @@ function tuple() {
     }
     return args;
 }
-is;
-boolean;
-{
-}
-{};
-string > ();
-args;
-{
-}
+var C = (function () {
+    function C() {
+    }
+    return C;
+})();
+var inferred = tuple(1, "foo", false, new C());
+var match = tuple(1, "foo", false, new C());
