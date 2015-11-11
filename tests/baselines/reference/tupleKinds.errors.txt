@@ -1,12 +1,8 @@
-tests/cases/compiler/tupleKinds.ts(1,22): error TS2370: A rest parameter must be of an array type.
-tests/cases/compiler/tupleKinds.ts(7,5): error TS2322: Type '{}' is not assignable to type '[number, string, boolean, C]'.
-  Property '0' is missing in type '{}'.
+tests/cases/compiler/tupleKinds.ts(7,5): error TS2322: Type '{ ... }' is not assignable to type '[number, string, boolean, C]'.
 
 
-==== tests/cases/compiler/tupleKinds.ts (2 errors) ====
+==== tests/cases/compiler/tupleKinds.ts (1 errors) ====
     function tuple<...T>(...args:...T): ...T {
-                         ~~~~~~~~~~~~
-!!! error TS2370: A rest parameter must be of an array type.
         return args;
     }
     
@@ -14,5 +10,4 @@ tests/cases/compiler/tupleKinds.ts(7,5): error TS2322: Type '{}' is not assignab
     let inferred = tuple(1, "foo", false, new C());
     let match: [number, string, boolean, C] = tuple(1, "foo", false, new C());
         ~~~~~
-!!! error TS2322: Type '{}' is not assignable to type '[number, string, boolean, C]'.
-!!! error TS2322:   Property '0' is missing in type '{}'.
+!!! error TS2322: Type '{ ... }' is not assignable to type '[number, string, boolean, C]'.

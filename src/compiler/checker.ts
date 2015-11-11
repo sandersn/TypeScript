@@ -1648,8 +1648,8 @@ namespace ts {
                         // The specified symbol flags need to be reinterpreted as type flags
                         buildSymbolDisplay(type.symbol, writer, enclosingDeclaration, SymbolFlags.Type, SymbolFormatFlags.None, flags);
                     }
-                    else if (type.flags & TypeFlags.Tuple) {
-                        writeTupleType(<TupleType>type);
+                    else if (    isTupleType(type)) {
+                        writeTupleType(type);
                     }
                     else if (type.flags & TypeFlags.UnionOrIntersection) {
                         writeUnionOrIntersectionType(<UnionOrIntersectionType>type, flags);
@@ -2414,7 +2414,7 @@ namespace ts {
                         : elementType;
                     if (!type) {
                         if (isTupleType(parentType)) {
-                            error(declaration, Diagnostics.Tuple_type_0_with_length_1_cannot_be_assigned_to_tuple_with_length_2, typeToString(parentType), (<TupleType>parentType).elementTypes.length, pattern.elements.length);
+                            error(declaration, Diagnostics.Tuple_type_0_with_length_1_cannot_be_assigned_to_tuple_with_length_2, typeToString(parentType), parentType.elementTypes.length, pattern.elements.length);
                         }
                         else {
                             error(declaration, Diagnostics.Type_0_has_no_property_1, typeToString(parentType), propName);
@@ -3102,9 +3102,10 @@ namespace ts {
         function getDeclaredTypeOfTypeParameter(symbol: Symbol): TypeParameter {
             const links = getSymbolLinks(symbol);
             if (!links.declaredType) {
-                const type = <TypeParameter>createType(TypeFlags.TypeParameter);
+                const declaration = <TypeParameterDeclaration>getDeclarationOfKind(symbol, SyntaxKind.TypeParameter);
+                const type = <TypeParameter>createType(declaration.dotDotDotToken ? TypeFlags.TupleKind : TypeFlags.TypeParameter);
                 type.symbol = symbol;
-                if (!(<TypeParameterDeclaration>getDeclarationOfKind(symbol, SyntaxKind.TypeParameter)).constraint) {
+                if (!declaration.constraint) {
                     type.constraint = noConstraintType;
                 }
                 links.declaredType = type;
@@ -3544,8 +3545,8 @@ namespace ts {
                 else if (type.flags & TypeFlags.Anonymous) {
                     resolveAnonymousTypeMembers(<AnonymousType>type);
                 }
-                else if (type.flags & TypeFlags.Tuple) {
-                    resolveTupleTypeMembers(<TupleType>type);
+                else if (isTupleType(type)) {
+                    resolveTupleTypeMembers(type);
                 }
                 else if (type.flags & TypeFlags.Union) {
                     resolveUnionTypeMembers(<UnionType>type);
@@ -3812,16 +3813,11 @@ namespace ts {
                     : undefined;
                 const typeParameters = classType ? classType.localTypeParameters :
                     declaration.typeParameters ? getTypeParametersFromDeclaration(declaration.typeParameters) : undefined;
-                const parameters: Symbol[] = [];
-                let hasStringLiterals = false;
+                const parameters = map(declaration.parameters, p => p.symbol);
+                const hasStringLiterals = !!forEach(declaration.parameters, p => p.type && p.type.kind === SyntaxKind.StringLiteral);
                 let minArgumentCount = -1;
                 for (let i = 0, n = declaration.parameters.length; i < n; i++) {
                     const param = declaration.parameters[i];
-                    parameters.push(param.symbol);
-                    if (param.type && param.type.kind === SyntaxKind.StringLiteral) {
-                        hasStringLiterals = true;
-                    }
-
                     if (param.initializer || param.questionToken || param.dotDotDotToken) {
                         if (minArgumentCount < 0) {
                             minArgumentCount = i;
@@ -4201,12 +4197,12 @@ namespace ts {
                 // We only support expressions that are simple qualified names. For other expressions this produces undefined.
                 const typeNameOrExpression = node.kind === SyntaxKind.TypeReference ? (<TypeReferenceNode>node).typeName :
                     isSupportedExpressionWithTypeArguments(<ExpressionWithTypeArguments>node) ? (<ExpressionWithTypeArguments>node).expression :
-                    undefined;
+                        undefined;
                 const symbol = typeNameOrExpression && resolveEntityName(typeNameOrExpression, SymbolFlags.Type) || unknownSymbol;
                 const type = symbol === unknownSymbol ? unknownType :
                     symbol.flags & (SymbolFlags.Class | SymbolFlags.Interface) ? getTypeFromClassOrInterfaceReference(node, symbol) :
-                    symbol.flags & SymbolFlags.TypeAlias ? getTypeFromTypeAliasReference(node, symbol) :
-                    getTypeFromNonGenericTypeReference(node, symbol);
+                        symbol.flags & SymbolFlags.TypeAlias ? getTypeFromTypeAliasReference(node, symbol) :
+                            getTypeFromNonGenericTypeReference(node, symbol);
                 // Cache both the resolved symbol and the resolved type. The resolved symbol is needed in when we check the
                 // type reference in checkTypeReferenceOrExpressionWithTypeArguments.
                 links.resolvedSymbol = symbol;
@@ -4749,8 +4745,8 @@ namespace ts {
                 if (type.flags & TypeFlags.Reference) {
                     return createTypeReference((<TypeReference>type).target, instantiateList((<TypeReference>type).typeArguments, mapper, instantiateType));
                 }
-                if (type.flags & TypeFlags.Tuple) {
-                    return createTupleType(instantiateList((<TupleType>type).elementTypes, mapper, instantiateType));
+                if (isTupleType(type)) {
+                    return createTupleType(instantiateList(type.elementTypes, mapper, instantiateType));
                 }
                 if (type.flags & TypeFlags.Union) {
                     return getUnionType(instantiateList((<UnionType>type).types, mapper, instantiateType), /*noSubtypeReduction*/ true);
@@ -5813,6 +5809,10 @@ namespace ts {
             return type.flags & TypeFlags.Reference && (<TypeReference>type).target === globalArrayType;
         }
 
+        function isTupleKind(type: Type): boolean {
+            return !!(type.flags & TypeFlags.TupleKind);
+        }
+
         function isArrayLikeType(type: Type): boolean {
             // A type is array-like if it is not the undefined or null type and if it is assignable to any[]
             return !(type.flags & (TypeFlags.Undefined | TypeFlags.Null)) && isTypeAssignableTo(type, anyArrayType);
@@ -6084,10 +6084,10 @@ namespace ts {
                         inferFromTypes(sourceTypes[i], targetTypes[i]);
                     }
                 }
-                else if (source.flags & TypeFlags.Tuple && target.flags & TypeFlags.Tuple && (<TupleType>source).elementTypes.length === (<TupleType>target).elementTypes.length) {
+                else if (isTupleType(source) && isTupleType(target) && source.elementTypes.length === target.elementTypes.length) {
                     // If source and target are tuples of the same size, infer from element types
-                    const sourceTypes = (<TupleType>source).elementTypes;
-                    const targetTypes = (<TupleType>target).elementTypes;
+                    const sourceTypes = source.elementTypes;
+                    const targetTypes = target.elementTypes;
                     for (let i = 0; i < sourceTypes.length; i++) {
                         inferFromTypes(sourceTypes[i], targetTypes[i]);
                     }
@@ -6124,14 +6124,14 @@ namespace ts {
                     }
                 }
                 else {
-                    source = getApparentType(source);
-                    if (source.flags & TypeFlags.ObjectType && (target.flags & (TypeFlags.Reference | TypeFlags.Tuple) ||
+                    const apparentSource = getApparentType(source);
+                    if (apparentSource.flags & TypeFlags.ObjectType && (target.flags & (TypeFlags.Reference | TypeFlags.Tuple) ||
                         (target.flags & TypeFlags.Anonymous) && target.symbol && target.symbol.flags & (SymbolFlags.Method | SymbolFlags.TypeLiteral | SymbolFlags.Class))) {
-                        // If source is an object type, and target is a type reference, a tuple type, the type of a method, or a type literal, infer from members
-                        if (isInProcess(source, target)) {
+                        // If apparentSource is an object type, and target is a type reference, a tuple type, the type of a method, or a type literal, infer from members
+                        if (isInProcess(apparentSource, target)) {
                             return;
                         }
-                        if (isDeeplyNestedGeneric(source, sourceStack, depth) && isDeeplyNestedGeneric(target, targetStack, depth)) {
+                        if (isDeeplyNestedGeneric(apparentSource, sourceStack, depth) && isDeeplyNestedGeneric(target, targetStack, depth)) {
                             return;
                         }
 
@@ -6139,15 +6139,15 @@ namespace ts {
                             sourceStack = [];
                             targetStack = [];
                         }
-                        sourceStack[depth] = source;
+                        sourceStack[depth] = apparentSource;
                         targetStack[depth] = target;
                         depth++;
-                        inferFromProperties(source, target);
-                        inferFromSignatures(source, target, SignatureKind.Call);
-                        inferFromSignatures(source, target, SignatureKind.Construct);
-                        inferFromIndexTypes(source, target, IndexKind.String, IndexKind.String);
-                        inferFromIndexTypes(source, target, IndexKind.Number, IndexKind.Number);
-                        inferFromIndexTypes(source, target, IndexKind.String, IndexKind.Number);
+                        inferFromProperties(apparentSource, target);
+                        inferFromSignatures(apparentSource, target, SignatureKind.Call);
+                        inferFromSignatures(apparentSource, target, SignatureKind.Construct);
+                        inferFromIndexTypes(apparentSource, target, IndexKind.String, IndexKind.String);
+                        inferFromIndexTypes(apparentSource, target, IndexKind.Number, IndexKind.Number);
+                        inferFromIndexTypes(apparentSource, target, IndexKind.String, IndexKind.Number);
                         depth--;
                     }
                 }
@@ -9529,7 +9529,7 @@ namespace ts {
                 // Permit 'number[] | "foo"' to be asserted to 'string'.
                 const bothAreStringLike =
                     someConstituentTypeHasKind(targetType, TypeFlags.StringLike) &&
-                        someConstituentTypeHasKind(widenedType, TypeFlags.StringLike);
+                    someConstituentTypeHasKind(widenedType, TypeFlags.StringLike);
                 if (!bothAreStringLike && !(isTypeAssignableTo(targetType, widenedType))) {
                     checkTypeAssignableTo(exprType, targetType, node, Diagnostics.Neither_type_0_nor_type_1_is_assignable_to_the_other);
                 }
@@ -10193,7 +10193,7 @@ namespace ts {
                         }
                         else {
                             if (isTupleType(sourceType)) {
-                                error(e, Diagnostics.Tuple_type_0_with_length_1_cannot_be_assigned_to_tuple_with_length_2, typeToString(sourceType), (<TupleType>sourceType).elementTypes.length, elements.length);
+                                error(e, Diagnostics.Tuple_type_0_with_length_1_cannot_be_assigned_to_tuple_with_length_2, typeToString(sourceType), sourceType.elementTypes.length, elements.length);
                             }
                             else {
                                 error(e, Diagnostics.Type_0_has_no_property_1, typeToString(sourceType), propName);
@@ -10750,7 +10750,7 @@ namespace ts {
 
             // Only check rest parameter type if it's not a binding pattern. Since binding patterns are
             // not allowed in a rest parameter, we already have an error from checkGrammarParameterList.
-            if (node.dotDotDotToken && !isBindingPattern(node.name) && !isArrayType(getTypeOfSymbol(node.symbol))) {
+            if (node.dotDotDotToken && !isBindingPattern(node.name) && !isArrayType(getTypeOfSymbol(node.symbol)) && !isTupleKind(getTypeOfSymbol(node.symbol))) {
                 error(node, Diagnostics.A_rest_parameter_must_be_of_an_array_type);
             }
         }
@@ -11439,7 +11439,7 @@ namespace ts {
 
             // Abstract methods can't have an implementation -- in particular, they don't need one.
             if (!isExportSymbolInsideModule && lastSeenNonAmbientDeclaration && !lastSeenNonAmbientDeclaration.body &&
-                !(lastSeenNonAmbientDeclaration.flags & NodeFlags.Abstract) ) {
+                !(lastSeenNonAmbientDeclaration.flags & NodeFlags.Abstract)) {
                 reportImplementationExpectedError(lastSeenNonAmbientDeclaration);
             }
 
@@ -14373,8 +14373,8 @@ namespace ts {
                             if (className) {
                                 copySymbol(location.symbol, meaning);
                             }
-                            // fall through; this fall-through is necessary because we would like to handle
-                            // type parameter inside class expression similar to how we handle it in classDeclaration and interface Declaration
+                        // fall through; this fall-through is necessary because we would like to handle
+                        // type parameter inside class expression similar to how we handle it in classDeclaration and interface Declaration
                         case SyntaxKind.ClassDeclaration:
                         case SyntaxKind.InterfaceDeclaration:
                             // If we didn't come from static member of class or interface,
@@ -14530,8 +14530,8 @@ namespace ts {
                 return resolveEntityName(<EntityName>entityName, meaning);
             }
             else if ((entityName.parent.kind === SyntaxKind.JsxOpeningElement) ||
-                     (entityName.parent.kind === SyntaxKind.JsxSelfClosingElement) ||
-                     (entityName.parent.kind === SyntaxKind.JsxClosingElement)) {
+                (entityName.parent.kind === SyntaxKind.JsxSelfClosingElement) ||
+                (entityName.parent.kind === SyntaxKind.JsxClosingElement)) {
                 return getJsxElementTagSymbol(<JsxOpeningLikeElement>entityName.parent);
             }
             else if (isExpression(entityName)) {
@@ -14598,8 +14598,8 @@ namespace ts {
                         : getSymbolOfPartOfRightHandSideOfImportEquals(<Identifier>node);
                 }
                 else if (node.parent.kind === SyntaxKind.BindingElement &&
-                        node.parent.parent.kind === SyntaxKind.ObjectBindingPattern &&
-                        node === (<BindingElement>node.parent).propertyName) {
+                    node.parent.parent.kind === SyntaxKind.ObjectBindingPattern &&
+                    node === (<BindingElement>node.parent).propertyName) {
                     const typeOfPattern = getTypeOfNode(node.parent.parent);
                     const propertyDeclaration = typeOfPattern && getPropertyOfType(typeOfPattern, (<Identifier>node).text);
 
@@ -14636,7 +14636,7 @@ namespace ts {
                             (<ImportDeclaration>node.parent).moduleSpecifier === node)) {
                         return resolveExternalModuleName(node, <LiteralExpression>node);
                     }
-                    // Fall through
+                // Fall through
 
                 case SyntaxKind.NumericLiteral:
                     // index access
@@ -14832,7 +14832,7 @@ namespace ts {
                 if (links.isNestedRedeclaration === undefined) {
                     const container = getEnclosingBlockScopeContainer(symbol.valueDeclaration);
                     links.isNestedRedeclaration = isStatementWithLocals(container) &&
-                    !!resolveName(container.parent, symbol.name, SymbolFlags.Value, /*nameNotFoundMessage*/ undefined, /*nameArg*/ undefined);
+                        !!resolveName(container.parent, symbol.name, SymbolFlags.Value, /*nameNotFoundMessage*/ undefined, /*nameArg*/ undefined);
                 }
                 return links.isNestedRedeclaration;
             }
@@ -15089,12 +15089,12 @@ namespace ts {
         }
 
         function getExternalModuleFileFromDeclaration(declaration: ImportEqualsDeclaration | ImportDeclaration | ExportDeclaration): SourceFile {
-                const specifier = getExternalModuleName(declaration);
-                const moduleSymbol = getSymbolAtLocation(specifier);
-                if (!moduleSymbol) {
-                    return undefined;
-                }
-                return getDeclarationOfKind(moduleSymbol, SyntaxKind.SourceFile) as SourceFile;
+            const specifier = getExternalModuleName(declaration);
+            const moduleSymbol = getSymbolAtLocation(specifier);
+            if (!moduleSymbol) {
+                return undefined;
+            }
+            return getDeclarationOfKind(moduleSymbol, SyntaxKind.SourceFile) as SourceFile;
         }
 
         function initializeTypeChecker() {
