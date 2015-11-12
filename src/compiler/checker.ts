@@ -1648,7 +1648,7 @@ namespace ts {
                         // The specified symbol flags need to be reinterpreted as type flags
                         buildSymbolDisplay(type.symbol, writer, enclosingDeclaration, SymbolFlags.Type, SymbolFormatFlags.None, flags);
                     }
-                    else if (    isTupleType(type)) {
+                    else if (isTupleType(type)) {
                         writeTupleType(type);
                     }
                     else if (type.flags & TypeFlags.UnionOrIntersection) {
@@ -4655,7 +4655,7 @@ namespace ts {
         }
 
         function instantiateTypeParameter(typeParameter: TypeParameter, mapper: TypeMapper): TypeParameter {
-            const result = <TypeParameter>createType(TypeFlags.TypeParameter);
+            const result = <TypeParameter>createType(typeParameter.flags & (TypeFlags.TypeParameter | TypeFlags.TupleKind));
             result.symbol = typeParameter.symbol;
             if (typeParameter.constraint) {
                 result.constraint = instantiateType(typeParameter.constraint, mapper);
@@ -4735,7 +4735,8 @@ namespace ts {
 
         function instantiateType(type: Type, mapper: TypeMapper): Type {
             if (type && mapper !== identityMapper) {
-                if (type.flags & TypeFlags.TypeParameter) {
+                if (type.flags & TypeFlags.TypeParameter || isTupleKind(type)) {
+                    // TODO: Should be OK as long as the mapper is correctly initialised to map kinds to tuples. 
                     return mapper(<TypeParameter>type);
                 }
                 if (type.flags & TypeFlags.Anonymous) {
@@ -6041,6 +6042,11 @@ namespace ts {
                 return false;
             }
 
+            /**
+             * Reminder: @source is the thing that might provide type information to @target.
+             * For example, let f = <T>(t: T) => t in f(12);
+             * 12: number and source=number, target=T
+             */
             function inferFromTypes(source: Type, target: Type) {
                 if (target.flags & TypeFlags.TypeParameter) {
                     // If target is a type parameter, make an inference, unless the source type contains
@@ -6075,6 +6081,9 @@ namespace ts {
                         }
                     }
                 }
+                else if (target.flags & TypeFlags.TupleKind) {
+                    // TODO: Some stuff here. It should look a LOT like the previous branch, so maybe just merge the two.
+                }
                 else if (source.flags & TypeFlags.Reference && target.flags & TypeFlags.Reference && (<TypeReference>source).target === (<TypeReference>target).target) {
                     // If source and target are references to the same generic type, infer from type arguments
                     const sourceTypes = (<TypeReference>source).typeArguments || emptyArray;
@@ -6101,6 +6110,11 @@ namespace ts {
                         if (t.flags & TypeFlags.TypeParameter && contains(context.typeParameters, t)) {
                             typeParameter = <TypeParameter>t;
                             typeParameterCount++;
+                        }
+                        else if(t.flags & TypeFlags.TupleKind) {
+                            // TODO: freak out and throw up our hands!! (I don't think spreading kinds across unions should be in v1 -- this should be checked elsewhere)
+                            // For now, throw a useless string.
+                            throw 'oh no!';
                         }
                         else {
                             inferFromTypes(source, t);
@@ -6402,6 +6416,7 @@ namespace ts {
         function getNarrowedTypeOfSymbol(symbol: Symbol, node: Node) {
             let type = getTypeOfSymbol(symbol);
             // Only narrow when symbol is variable of type any or an object, union, or type parameter type
+            // TODO: Again, kinds as part of unions should come later.
             if (node && symbol.flags & SymbolFlags.Variable) {
                 if (isTypeAny(type) || type.flags & (TypeFlags.ObjectType | TypeFlags.Union | TypeFlags.TypeParameter)) {
                     loop: while (node.parent) {
@@ -10128,7 +10143,7 @@ namespace ts {
             if (!isTypeAnyOrAllConstituentTypesHaveKind(leftType, TypeFlags.StringLike | TypeFlags.NumberLike | TypeFlags.ESSymbol)) {
                 error(left, Diagnostics.The_left_hand_side_of_an_in_expression_must_be_of_type_any_string_number_or_symbol);
             }
-            if (!isTypeAnyOrAllConstituentTypesHaveKind(rightType, TypeFlags.ObjectType | TypeFlags.TypeParameter)) {
+            if (!isTypeAnyOrAllConstituentTypesHaveKind(rightType, TypeFlags.ObjectType | TypeFlags.TypeParameter | TypeFlags.TupleKind)) {
                 error(right, Diagnostics.The_right_hand_side_of_an_in_expression_must_be_of_type_any_an_object_type_or_a_type_parameter);
             }
             return booleanType;
@@ -12517,7 +12532,7 @@ namespace ts {
             const rightType = checkExpression(node.expression);
             // unknownType is returned i.e. if node.expression is identifier whose name cannot be resolved
             // in this case error about missing name is already reported - do not report extra one
-            if (!isTypeAnyOrAllConstituentTypesHaveKind(rightType, TypeFlags.ObjectType | TypeFlags.TypeParameter)) {
+            if (!isTypeAnyOrAllConstituentTypesHaveKind(rightType, TypeFlags.ObjectType | TypeFlags.TypeParameter | TypeFlags.TupleKind)) {
                 error(node.expression, Diagnostics.The_right_hand_side_of_a_for_in_statement_must_be_of_type_any_an_object_type_or_a_type_parameter);
             }
 
