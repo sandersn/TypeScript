@@ -3952,6 +3952,9 @@ namespace ts {
                 if (type.flags & TypeFlags.Reference && (<TypeReference>type).target === globalArrayType) {
                     return (<TypeReference>type).typeArguments[0];
                 }
+                else if (type.flags & TypeFlags.TupleKind) {
+                    return type;
+                }
             }
             return anyType;
         }
@@ -5823,8 +5826,8 @@ namespace ts {
             return !!getPropertyOfType(type, "0");
         }
 
-        function isStringLiteralType(type: Type) {
-            return type.flags & TypeFlags.StringLiteral;
+        function isStringLiteralType(type: Type): boolean {
+            return !!(type.flags & TypeFlags.StringLiteral);
         }
 
         /**
@@ -6059,30 +6062,55 @@ namespace ts {
                         return;
                     }
 
-                    const typeParameters = context.typeParameters;
-                    for (let i = 0; i < typeParameters.length; i++) {
-                        if (target === typeParameters[i]) {
-                            const inferences = context.inferences[i];
-                            if (!inferences.isFixed) {
-                                // Any inferences that are made to a type parameter in a union type are inferior
-                                // to inferences made to a flat (non-union) type. This is because if we infer to
-                                // T | string[], we really don't know if we should be inferring to T or not (because
-                                // the correct constituent on the target side could be string[]). Therefore, we put
-                                // such inferior inferences into a secondary bucket, and only use them if the primary
-                                // bucket is empty.
-                                const candidates = inferiority ?
-                                    inferences.secondary || (inferences.secondary = []) :
-                                    inferences.primary || (inferences.primary = []);
-                                if (!contains(candidates, source)) {
-                                    candidates.push(source);
-                                }
+                    const i = indexOf(context.typeParameters, target);
+                    if (i > -1) {
+                        const inferences = context.inferences[i];
+                        if (!inferences.isFixed) {
+                            // Any inferences that are made to a type parameter in a union type are inferior
+                            // to inferences made to a flat (non-union) type. This is because if we infer to
+                            // T | string[], we really don't know if we should be inferring to T or not (because
+                            // the correct constituent on the target side could be string[]). Therefore, we put
+                            // such inferior inferences into a secondary bucket, and only use them if the primary
+                            // bucket is empty.
+                            const candidates = inferiority ?
+                                inferences.secondary || (inferences.secondary = []) :
+                                inferences.primary || (inferences.primary = []);
+                            if (!contains(candidates, source)) {
+                                candidates.push(source);
                             }
-                            return;
                         }
+                        return;
                     }
                 }
                 else if (target.flags & TypeFlags.TupleKind) {
-                    // TODO: Some stuff here. It should look a LOT like the previous branch, so maybe just merge the two.
+                    // TODO: Source should be a tuple for us to infer anything. 
+                    // If it's a tuple, I think the code will be nearly the same as the previous branch.
+
+                    // If target is a type parameter, make an inference if the source type is a tuple-like type.
+                    // If it's not, hopefully it will get fixed to a tuple and the second (nth?) round of inference will succeed.
+                    if (!isTupleLikeType(source)) {
+                        return;
+                    }
+
+                    const i = indexOf(context.typeParameters, target);
+                    if (i > -1) {
+                        const inferences = context.inferences[i];
+                        if (!inferences.isFixed) {
+                            // Any inferences that are made to a type parameter in a union type are inferior
+                            // to inferences made to a flat (non-union) type. This is because if we infer to
+                            // T | string[], we really don't know if we should be inferring to T or not (because
+                            // the correct constituent on the target side could be string[]). Therefore, we put
+                            // such inferior inferences into a secondary bucket, and only use them if the primary
+                            // bucket is empty.
+                            const candidates = inferiority ?
+                                inferences.secondary || (inferences.secondary = []) :
+                                inferences.primary || (inferences.primary = []);
+                            if (!contains(candidates, source)) {
+                                candidates.push(source);
+                            }
+                        }
+                        return;
+                    }
                 }
                 else if (source.flags & TypeFlags.Reference && target.flags & TypeFlags.Reference && (<TypeReference>source).target === (<TypeReference>target).target) {
                     // If source and target are references to the same generic type, infer from type arguments
@@ -6111,10 +6139,10 @@ namespace ts {
                             typeParameter = <TypeParameter>t;
                             typeParameterCount++;
                         }
-                        else if(t.flags & TypeFlags.TupleKind) {
+                        else if (t.flags & TypeFlags.TupleKind) {
                             // TODO: freak out and throw up our hands!! (I don't think spreading kinds across unions should be in v1 -- this should be checked elsewhere)
                             // For now, throw a useless string.
-                            throw 'oh no!';
+                            throw "oh no!";
                         }
                         else {
                             inferFromTypes(source, t);
@@ -7120,13 +7148,20 @@ namespace ts {
             return applyToContextualType(type, t => getIndexTypeOfStructuredType(t, kind));
         }
 
-        function contextualTypeIsStringLiteralType(type: Type): boolean {
-            return !!(type.flags & TypeFlags.Union ? forEach((<UnionType>type).types, isStringLiteralType) : isStringLiteralType(type));
+        function contextualTypeIs (typePredicate: (t: Type) => boolean, t: Type): boolean {
+            return !!(t.flags & TypeFlags.Union ? forEach((<UnionType>t).types, typePredicate) : typePredicate(t));
         }
 
-        // Return true if the given contextual type is a tuple-like type
+        function contextualTypeIsStringLiteralType(type: Type): boolean {
+            return contextualTypeIs(isStringLiteralType, type);
+        }
+
         function contextualTypeIsTupleLikeType(type: Type): boolean {
-            return !!(type.flags & TypeFlags.Union ? forEach((<UnionType>type).types, isTupleLikeType) : isTupleLikeType(type));
+            return contextualTypeIs(isTupleLikeType, type);
+        }
+
+        function contextualTypeIsTupleKind(type: Type): boolean {
+            return contextualTypeIs(isTupleKind, type);
         }
 
         // Return true if the given contextual type provides an index signature of the given kind
@@ -7457,6 +7492,12 @@ namespace ts {
                             }
                         }
                     }
+                    if (elementTypes.length) {
+                        return createTupleType(elementTypes);
+                    }
+                }
+                else if (contextualType && contextualTypeIsTupleKind(contextualType)) {
+                    // TODO: Handle contextual typing by a binding pattern
                     if (elementTypes.length) {
                         return createTupleType(elementTypes);
                     }
@@ -8615,11 +8656,11 @@ namespace ts {
 
             // On this call to inferTypeArguments, we may get more inferences for certain type parameters that were not
             // fixed last time. This means that a type parameter that failed inference last time may succeed this time,
-            // or vice versa. Therefore, the failedTypeParameterIndex is useless if it points to an unfixed type parameter,
-            // because it may change. So here we reset it. However, getInferredType will not revisit any type parameters
-            // that were previously fixed. So if a fixed type parameter failed previously, it will fail again because
-            // it will contain the exact same set of inferences. So if we reset the index from a fixed type parameter,
-            // we will lose information that we won't recover this time around.
+            // or vice versa. Therefore, `failedTypeParameterIndex` is useless if it points to an unfixed type parameter,
+            // because it may change. So here we reset it if it's already fixed: getInferredType will not revisit any type parameters
+            // that were previously fixed. If a fixed type parameter failed previously, it will fail again because
+            // it will contain the exact same set of inferences. What's worse, resetting a fixed type parameter means that
+            // we would lose information that we won't recover this time around.
             if (context.failedTypeParameterIndex !== undefined && !context.inferences[context.failedTypeParameterIndex].isFixed) {
                 context.failedTypeParameterIndex = undefined;
             }
@@ -9172,7 +9213,7 @@ namespace ts {
             }
 
             // No signature was applicable. We have already reported the errors for the invalid signature.
-            // If this is a type resolution session, e.g. Language Service, try to get better information that anySignature.
+            // If this is a type resolution session, e.g. Language Service, try to get better information than anySignature.
             // Pick the first candidate that matches the arity. This way we can get a contextual type for cases like:
             //  declare function f(a: { xa: number; xb: number; });
             //  f({ |
