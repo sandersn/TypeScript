@@ -1,0 +1,143 @@
+=== tests/cases/compiler/tupleKinds.ts ===
+// TODO:
+// 2. Concatenated tuples (implicitly, since I don't want to write the syntax yet)
+// 3. As many positive examples as I can get from the proposal
+function tupleId<...V>(y:...V): ...V {
+>tupleId : <V>(y: { ... }) => { ... }
+>V : { ... }
+>y : { ... }
+>V : { ... }
+>V : { ... }
+
+    // binds, infers and returns a tuple kind
+    return y;
+>y : { ... }
+}
+function call<...T,U>(f: (ts:...T) => U, ts:...T): U {
+>call : <T, U>(f: (ts: { ... }) => U, ts: { ... }) => U
+>T : { ... }
+>U : U
+>f : (ts: { ... }) => U
+>ts : { ... }
+>T : { ... }
+>U : U
+>ts : { ... }
+>T : { ... }
+>U : U
+
+    // binds, infers a tuple kind, then goes back to fill it in for a function argument
+    return f(ts);
+>f(ts) : U
+>f : (ts: { ... }) => U
+>ts : { ... }
+}
+class K<...T,U> {
+>K : K<{ ... }, U>
+>T : { ... }
+>U : U
+
+    uselessNestedCall(f: (ts:...T) => U, ts:...T): U {
+>uselessNestedCall : (f: (ts: { ... }) => U, ts: { ... }) => U
+>f : (ts: { ... }) => U
+>ts : { ... }
+>T : { ... }
+>U : U
+>ts : { ... }
+>T : { ... }
+>U : U
+
+        return f(ts);
+>f(ts) : U
+>f : (ts: { ... }) => U
+>ts : { ... }
+    }
+}
+
+let noArgId = tupleId([]);
+>noArgId : {}
+>tupleId([]) : {}
+>tupleId : <V>(y: { ... }) => { ... }
+>[] : undefined[]
+
+let inferredTupleId: [number, string] = tupleId([1, "foo"]);
+>inferredTupleId : [number, string]
+>tupleId([1, "foo"]) : [number, string]
+>tupleId : <V>(y: { ... }) => { ... }
+>[1, "foo"] : [number, string]
+>1 : number
+>"foo" : string
+
+let acceptTupleId = tupleId([2, "bar"]);
+>acceptTupleId : [number, string]
+>tupleId([2, "bar"]) : [number, string]
+>tupleId : <V>(y: { ... }) => { ... }
+>[2, "bar"] : [number, string]
+>2 : number
+>"bar" : string
+
+let compareTupleId: [number, string] = acceptTupleId;
+>compareTupleId : [number, string]
+>acceptTupleId : [number, string]
+
+function f(t: [number, string]): number {
+>f : (t: [number, string]) => number
+>t : [number, string]
+
+    return t[0];
+>t[0] : number
+>t : [number, string]
+>0 : number
+}
+let inferredCall: number = call(f, [3, "baz"]);
+>inferredCall : number
+>call(f, [3, "baz"]) : number
+>call : <T, U>(f: (ts: { ... }) => U, ts: { ... }) => U
+>f : (t: [number, string]) => number
+>[3, "baz"] : [number, string]
+>3 : number
+>"baz" : string
+
+let acceptCall = call(f, [4, "qux"]);
+>acceptCall : number
+>call(f, [4, "qux"]) : number
+>call : <T, U>(f: (ts: { ... }) => U, ts: { ... }) => U
+>f : (t: [number, string]) => number
+>[4, "qux"] : [number, string]
+>4 : number
+>"qux" : string
+
+let compareCall: number = acceptCall;
+>compareCall : number
+>acceptCall : number
+
+let k = new K<[number, string], number>();
+>k : K<[number, string], number>
+>new K<[number, string], number>() : K<[number, string], number>
+>K : typeof K
+
+let inferredNestedCall: number = k.uselessNestedCall(f, [7, "squawk"]); 
+>inferredNestedCall : number
+>k.uselessNestedCall(f, [7, "squawk"]) : number
+>k.uselessNestedCall : (f: (ts: [number, string]) => number, ts: [number, string]) => number
+>k : K<[number, string], number>
+>uselessNestedCall : (f: (ts: [number, string]) => number, ts: [number, string]) => number
+>f : (t: [number, string]) => number
+>[7, "squawk"] : [number, string]
+>7 : number
+>"squawk" : string
+
+let acceptNestedCall = k.uselessNestedCall(f, [8, "squish"]);
+>acceptNestedCall : number
+>k.uselessNestedCall(f, [8, "squish"]) : number
+>k.uselessNestedCall : (f: (ts: [number, string]) => number, ts: [number, string]) => number
+>k : K<[number, string], number>
+>uselessNestedCall : (f: (ts: [number, string]) => number, ts: [number, string]) => number
+>f : (t: [number, string]) => number
+>[8, "squish"] : [number, string]
+>8 : number
+>"squish" : string
+
+let compareNestedCall: number = acceptNestedCall;
+>compareNestedCall : number
+>acceptNestedCall : number
+

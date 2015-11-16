@@ -1,0 +1,113 @@
+=== tests/cases/compiler/tupleKinds.ts ===
+// TODO:
+// 2. Concatenated tuples (implicitly, since I don't want to write the syntax yet)
+// 3. As many positive examples as I can get from the proposal
+function tupleId<...V>(y:...V): ...V {
+>tupleId : Symbol(tupleId, Decl(tupleKinds.ts, 0, 0))
+>V : Symbol(V, Decl(tupleKinds.ts, 3, 17))
+>y : Symbol(y, Decl(tupleKinds.ts, 3, 23))
+>V : Symbol(V, Decl(tupleKinds.ts, 3, 17))
+>V : Symbol(V, Decl(tupleKinds.ts, 3, 17))
+
+    // binds, infers and returns a tuple kind
+    return y;
+>y : Symbol(y, Decl(tupleKinds.ts, 3, 23))
+}
+function call<...T,U>(f: (ts:...T) => U, ts:...T): U {
+>call : Symbol(call, Decl(tupleKinds.ts, 6, 1))
+>T : Symbol(T, Decl(tupleKinds.ts, 7, 14))
+>U : Symbol(U, Decl(tupleKinds.ts, 7, 19))
+>f : Symbol(f, Decl(tupleKinds.ts, 7, 22))
+>ts : Symbol(ts, Decl(tupleKinds.ts, 7, 26))
+>T : Symbol(T, Decl(tupleKinds.ts, 7, 14))
+>U : Symbol(U, Decl(tupleKinds.ts, 7, 19))
+>ts : Symbol(ts, Decl(tupleKinds.ts, 7, 40))
+>T : Symbol(T, Decl(tupleKinds.ts, 7, 14))
+>U : Symbol(U, Decl(tupleKinds.ts, 7, 19))
+
+    // binds, infers a tuple kind, then goes back to fill it in for a function argument
+    return f(ts);
+>f : Symbol(f, Decl(tupleKinds.ts, 7, 22))
+>ts : Symbol(ts, Decl(tupleKinds.ts, 7, 40))
+}
+class K<...T,U> {
+>K : Symbol(K, Decl(tupleKinds.ts, 10, 1))
+>T : Symbol(T, Decl(tupleKinds.ts, 11, 8))
+>U : Symbol(U, Decl(tupleKinds.ts, 11, 13))
+
+    uselessNestedCall(f: (ts:...T) => U, ts:...T): U {
+>uselessNestedCall : Symbol(uselessNestedCall, Decl(tupleKinds.ts, 11, 17))
+>f : Symbol(f, Decl(tupleKinds.ts, 12, 22))
+>ts : Symbol(ts, Decl(tupleKinds.ts, 12, 26))
+>T : Symbol(T, Decl(tupleKinds.ts, 11, 8))
+>U : Symbol(U, Decl(tupleKinds.ts, 11, 13))
+>ts : Symbol(ts, Decl(tupleKinds.ts, 12, 40))
+>T : Symbol(T, Decl(tupleKinds.ts, 11, 8))
+>U : Symbol(U, Decl(tupleKinds.ts, 11, 13))
+
+        return f(ts);
+>f : Symbol(f, Decl(tupleKinds.ts, 12, 22))
+>ts : Symbol(ts, Decl(tupleKinds.ts, 12, 40))
+    }
+}
+
+let noArgId = tupleId([]);
+>noArgId : Symbol(noArgId, Decl(tupleKinds.ts, 17, 3))
+>tupleId : Symbol(tupleId, Decl(tupleKinds.ts, 0, 0))
+
+let inferredTupleId: [number, string] = tupleId([1, "foo"]);
+>inferredTupleId : Symbol(inferredTupleId, Decl(tupleKinds.ts, 18, 3))
+>tupleId : Symbol(tupleId, Decl(tupleKinds.ts, 0, 0))
+
+let acceptTupleId = tupleId([2, "bar"]);
+>acceptTupleId : Symbol(acceptTupleId, Decl(tupleKinds.ts, 19, 3))
+>tupleId : Symbol(tupleId, Decl(tupleKinds.ts, 0, 0))
+
+let compareTupleId: [number, string] = acceptTupleId;
+>compareTupleId : Symbol(compareTupleId, Decl(tupleKinds.ts, 20, 3))
+>acceptTupleId : Symbol(acceptTupleId, Decl(tupleKinds.ts, 19, 3))
+
+function f(t: [number, string]): number {
+>f : Symbol(f, Decl(tupleKinds.ts, 20, 53))
+>t : Symbol(t, Decl(tupleKinds.ts, 22, 11))
+
+    return t[0];
+>t : Symbol(t, Decl(tupleKinds.ts, 22, 11))
+>0 : Symbol(0)
+}
+let inferredCall: number = call(f, [3, "baz"]);
+>inferredCall : Symbol(inferredCall, Decl(tupleKinds.ts, 25, 3))
+>call : Symbol(call, Decl(tupleKinds.ts, 6, 1))
+>f : Symbol(f, Decl(tupleKinds.ts, 20, 53))
+
+let acceptCall = call(f, [4, "qux"]);
+>acceptCall : Symbol(acceptCall, Decl(tupleKinds.ts, 26, 3))
+>call : Symbol(call, Decl(tupleKinds.ts, 6, 1))
+>f : Symbol(f, Decl(tupleKinds.ts, 20, 53))
+
+let compareCall: number = acceptCall;
+>compareCall : Symbol(compareCall, Decl(tupleKinds.ts, 27, 3))
+>acceptCall : Symbol(acceptCall, Decl(tupleKinds.ts, 26, 3))
+
+let k = new K<[number, string], number>();
+>k : Symbol(k, Decl(tupleKinds.ts, 29, 3))
+>K : Symbol(K, Decl(tupleKinds.ts, 10, 1))
+
+let inferredNestedCall: number = k.uselessNestedCall(f, [7, "squawk"]); 
+>inferredNestedCall : Symbol(inferredNestedCall, Decl(tupleKinds.ts, 30, 3))
+>k.uselessNestedCall : Symbol(K.uselessNestedCall, Decl(tupleKinds.ts, 11, 17))
+>k : Symbol(k, Decl(tupleKinds.ts, 29, 3))
+>uselessNestedCall : Symbol(K.uselessNestedCall, Decl(tupleKinds.ts, 11, 17))
+>f : Symbol(f, Decl(tupleKinds.ts, 20, 53))
+
+let acceptNestedCall = k.uselessNestedCall(f, [8, "squish"]);
+>acceptNestedCall : Symbol(acceptNestedCall, Decl(tupleKinds.ts, 31, 3))
+>k.uselessNestedCall : Symbol(K.uselessNestedCall, Decl(tupleKinds.ts, 11, 17))
+>k : Symbol(k, Decl(tupleKinds.ts, 29, 3))
+>uselessNestedCall : Symbol(K.uselessNestedCall, Decl(tupleKinds.ts, 11, 17))
+>f : Symbol(f, Decl(tupleKinds.ts, 20, 53))
+
+let compareNestedCall: number = acceptNestedCall;
+>compareNestedCall : Symbol(compareNestedCall, Decl(tupleKinds.ts, 32, 3))
+>acceptNestedCall : Symbol(acceptNestedCall, Decl(tupleKinds.ts, 31, 3))
+
