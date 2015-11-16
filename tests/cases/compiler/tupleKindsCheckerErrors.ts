@@ -4,17 +4,17 @@ function tupleId<...V>(y:...V): ...V {
     // binds, infers and returns a tuple kind
     return y;
 }
-let acceptNoTupleId = tupleId(2);
+let ycleptNoTupleId = tupleId(200);
 function call<...T,U>(f: (ts:...T) => U, ts:...T): U {
     // binds, infers a tuple kind, then goes back to fill it in for a function argument
     return f(ts);
 }
-function tuple<...T>(...args:...T): ...T {
+function tuple<...W>(...args:...W): ...W {
     // uses rest args
     return args;
 }
-class K<...T,U> {
-    uselessNestedCall(f: (ts:...T) => U, ts:...T): U {
+class K<...X,Y> {
+    uselessNestedCall(f: (ts:...X) => Y, ts:...X): Y {
         return f(ts);
     }
 }

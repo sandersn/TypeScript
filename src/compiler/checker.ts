@@ -6045,6 +6045,27 @@ namespace ts {
                 return false;
             }
 
+            function pushTypeParameterCandidates(source: Type, target: Type) {
+                const i = indexOf(context.typeParameters, target);
+                if (i > -1) {
+                    const inferences = context.inferences[i];
+                    if (!inferences.isFixed) {
+                        // Any inferences that are made to a type parameter in a union type are inferior
+                        // to inferences made to a flat (non-union) type. This is because if we infer to
+                        // T | string[], we really don't know if we should be inferring to T or not (because
+                        // the correct constituent on the target side could be string[]). Therefore, we put
+                        // such inferior inferences into a secondary bucket, and only use them if the primary
+                        // bucket is empty.
+                        const candidates = inferiority ?
+                            inferences.secondary || (inferences.secondary = []) :
+                            inferences.primary || (inferences.primary = []);
+                        if (!contains(candidates, source)) {
+                            candidates.push(source);
+                        }
+                    }
+                }
+            }
+
             /**
              * Reminder: @source is the thing that might provide type information to @target.
              * For example, let f = <T>(t: T) => t in f(12);
@@ -6062,55 +6083,15 @@ namespace ts {
                         return;
                     }
 
-                    const i = indexOf(context.typeParameters, target);
-                    if (i > -1) {
-                        const inferences = context.inferences[i];
-                        if (!inferences.isFixed) {
-                            // Any inferences that are made to a type parameter in a union type are inferior
-                            // to inferences made to a flat (non-union) type. This is because if we infer to
-                            // T | string[], we really don't know if we should be inferring to T or not (because
-                            // the correct constituent on the target side could be string[]). Therefore, we put
-                            // such inferior inferences into a secondary bucket, and only use them if the primary
-                            // bucket is empty.
-                            const candidates = inferiority ?
-                                inferences.secondary || (inferences.secondary = []) :
-                                inferences.primary || (inferences.primary = []);
-                            if (!contains(candidates, source)) {
-                                candidates.push(source);
-                            }
-                        }
-                        return;
-                    }
+                    pushTypeParameterCandidates(source, target);
                 }
                 else if (target.flags & TypeFlags.TupleKind) {
-                    // TODO: Source should be a tuple for us to infer anything. 
-                    // If it's a tuple, I think the code will be nearly the same as the previous branch.
-
-                    // If target is a type parameter, make an inference if the source type is a tuple-like type.
-                    // If it's not, hopefully it will get fixed to a tuple and the second (nth?) round of inference will succeed.
+                    // If target is a tuple kind, make an inference if the source type is a tuple-like type.
                     if (!isTupleLikeType(source)) {
                         return;
                     }
 
-                    const i = indexOf(context.typeParameters, target);
-                    if (i > -1) {
-                        const inferences = context.inferences[i];
-                        if (!inferences.isFixed) {
-                            // Any inferences that are made to a type parameter in a union type are inferior
-                            // to inferences made to a flat (non-union) type. This is because if we infer to
-                            // T | string[], we really don't know if we should be inferring to T or not (because
-                            // the correct constituent on the target side could be string[]). Therefore, we put
-                            // such inferior inferences into a secondary bucket, and only use them if the primary
-                            // bucket is empty.
-                            const candidates = inferiority ?
-                                inferences.secondary || (inferences.secondary = []) :
-                                inferences.primary || (inferences.primary = []);
-                            if (!contains(candidates, source)) {
-                                candidates.push(source);
-                            }
-                        }
-                        return;
-                    }
+                    pushTypeParameterCandidates(source, target);
                 }
                 else if (source.flags & TypeFlags.Reference && target.flags & TypeFlags.Reference && (<TypeReference>source).target === (<TypeReference>target).target) {
                     // If source and target are references to the same generic type, infer from type arguments
@@ -6135,14 +6116,15 @@ namespace ts {
                     let typeParameter: TypeParameter;
                     // First infer to each type in union or intersection that isn't a type parameter
                     for (const t of targetTypes) {
-                        if (t.flags & TypeFlags.TypeParameter && contains(context.typeParameters, t)) {
-                            typeParameter = <TypeParameter>t;
-                            typeParameterCount++;
-                        }
-                        else if (t.flags & TypeFlags.TupleKind) {
+                        if (isTupleKind(t)) {
+                            // TODO: This is wrong, should be an error at DEFINITION site, not CALL site.
                             // TODO: freak out and throw up our hands!! (I don't think spreading kinds across unions should be in v1 -- this should be checked elsewhere)
                             // For now, throw a useless string.
                             throw "oh no!";
+                        }
+                        else if (t.flags & TypeFlags.TypeParameter && contains(context.typeParameters, t)) {
+                            typeParameter = <TypeParameter>t;
+                            typeParameterCount++;
                         }
                         else {
                             inferFromTypes(source, t);
