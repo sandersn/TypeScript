@@ -9,11 +9,10 @@ tests/cases/compiler/tupleKindsCheckerErrors.ts(22,5): error TS2322: Type '[numb
 tests/cases/compiler/tupleKindsCheckerErrors.ts(23,5): error TS2322: Type '[string, number]' is not assignable to type '[number, string]'.
   Types of property '0' are incompatible.
     Type 'string' is not assignable to type 'number'.
-tests/cases/compiler/tupleKindsCheckerErrors.ts(25,5): error TS2322: Type 'number' is not assignable to type '[number, string]'.
-  Property '0' is missing in type 'Number'.
-tests/cases/compiler/tupleKindsCheckerErrors.ts(31,18): error TS2453: The type argument for type parameter '{ ... }' cannot be inferred from the usage. Consider specifying the type arguments explicitly.
-  Type argument candidate '[number, string]' is not a valid type argument because it is not a supertype of candidate 'undefined[]'.
-    Property '0' is missing in type 'undefined[]'.
+tests/cases/compiler/tupleKindsCheckerErrors.ts(25,5): error TS2322: Type '{}' is not assignable to type '[number, string]'.
+  Property '0' is missing in type '{}'.
+tests/cases/compiler/tupleKindsCheckerErrors.ts(31,26): error TS2345: Argument of type 'undefined[]' is not assignable to parameter of type '[number, string]'.
+  Property '0' is missing in type 'undefined[]'.
 tests/cases/compiler/tupleKindsCheckerErrors.ts(32,18): error TS2453: The type argument for type parameter '{ ... }' cannot be inferred from the usage. Consider specifying the type arguments explicitly.
   Type argument candidate '[number, string]' is not a valid type argument because it is not a supertype of candidate '[number]'.
     Property '1' is missing in type '[number]'.
@@ -28,18 +27,16 @@ tests/cases/compiler/tupleKindsCheckerErrors.ts(34,22): error TS2453: The type a
   Type argument candidate '[number, string]' is not a valid type argument because it is not a supertype of candidate '[string, number]'.
     Types of property '0' are incompatible.
       Type 'string' is not assignable to type 'number'.
-tests/cases/compiler/tupleKindsCheckerErrors.ts(35,19): error TS2453: The type argument for type parameter '{ ... }' cannot be inferred from the usage. Consider specifying the type arguments explicitly.
-  Type argument candidate '[number, string]' is not a valid type argument because it is not a supertype of candidate 'number'.
-    Property '0' is missing in type 'Number'.
+tests/cases/compiler/tupleKindsCheckerErrors.ts(35,27): error TS2345: Argument of type 'number' is not assignable to parameter of type '[number, string]'.
+  Property '0' is missing in type 'Number'.
 tests/cases/compiler/tupleKindsCheckerErrors.ts(38,47): error TS2345: Argument of type 'undefined[]' is not assignable to parameter of type '[number, string]'.
-  Property '0' is missing in type 'undefined[]'.
 tests/cases/compiler/tupleKindsCheckerErrors.ts(39,51): error TS2345: Argument of type '[number]' is not assignable to parameter of type '[number, string]'.
 tests/cases/compiler/tupleKindsCheckerErrors.ts(40,52): error TS2345: Argument of type '[number, string, boolean]' is not assignable to parameter of type '[number, string]'.
 tests/cases/compiler/tupleKindsCheckerErrors.ts(41,51): error TS2345: Argument of type '[string, number]' is not assignable to parameter of type '[number, string]'.
 tests/cases/compiler/tupleKindsCheckerErrors.ts(42,48): error TS2345: Argument of type 'number' is not assignable to parameter of type '[number, string]'.
-tests/cases/compiler/tupleKindsCheckerErrors.ts(47,5): error TS2322: Type 'C' is not assignable to type '[number, string, boolean, C]'.
-  Property '0' is missing in type 'C'.
-tests/cases/compiler/tupleKindsCheckerErrors.ts(49,5): error TS2322: Type 'C' is not assignable to type '[number, string, boolean, C]'.
+tests/cases/compiler/tupleKindsCheckerErrors.ts(47,5): error TS2322: Type '{}' is not assignable to type '[number, string, boolean, C]'.
+  Property '0' is missing in type '{}'.
+tests/cases/compiler/tupleKindsCheckerErrors.ts(49,5): error TS2322: Type '{}' is not assignable to type '[number, string, boolean, C]'.
 
 
 ==== tests/cases/compiler/tupleKindsCheckerErrors.ts (16 errors) ====
@@ -53,12 +50,12 @@ tests/cases/compiler/tupleKindsCheckerErrors.ts(49,5): error TS2322: Type 'C' is
         // binds, infers a tuple kind, then goes back to fill it in for a function argument
         return f(ts);
     }
-    function tuple<...T>(...args:...T): ...T {
+    function tuple<...W>(...args:...W): ...W {
         // uses rest args
         return args;
     }
-    class K<...T,U> {
-        uselessNestedCall(f: (ts:...T) => U, ts:...T): U {
+    class K<...X,Y> {
+        uselessNestedCall(f: (ts:...X) => Y, ts:...X): Y {
             return f(ts);
         }
     }
@@ -83,18 +80,17 @@ tests/cases/compiler/tupleKindsCheckerErrors.ts(49,5): error TS2322: Type 'C' is
     // TODO: compareNoTuple and acceptNoTuple need to return an error -- acceptnoTuple doesn't even fail!
     let compareNoTupleId: [number, string] = tupleId(12);
         ~~~~~~~~~~~~~~~~
-!!! error TS2322: Type 'number' is not assignable to type '[number, string]'.
-!!! error TS2322:   Property '0' is missing in type 'Number'.
+!!! error TS2322: Type '{}' is not assignable to type '[number, string]'.
+!!! error TS2322:   Property '0' is missing in type '{}'.
     let acceptNoTupleId = tupleId(2);
     
     function f(t: [number, string]): number {
         return t[0];
     }
     let noArgsCall = call(f, []);
-                     ~~~~
-!!! error TS2453: The type argument for type parameter '{ ... }' cannot be inferred from the usage. Consider specifying the type arguments explicitly.
-!!! error TS2453:   Type argument candidate '[number, string]' is not a valid type argument because it is not a supertype of candidate 'undefined[]'.
-!!! error TS2453:     Property '0' is missing in type 'undefined[]'.
+                             ~~
+!!! error TS2345: Argument of type 'undefined[]' is not assignable to parameter of type '[number, string]'.
+!!! error TS2345:   Property '0' is missing in type 'undefined[]'.
     let tooFewCall = call(f, [14]);
                      ~~~~
 !!! error TS2453: The type argument for type parameter '{ ... }' cannot be inferred from the usage. Consider specifying the type arguments explicitly.
@@ -116,16 +112,14 @@ tests/cases/compiler/tupleKindsCheckerErrors.ts(49,5): error TS2322: Type 'C' is
 !!! error TS2453:     Types of property '0' are incompatible.
 !!! error TS2453:       Type 'string' is not assignable to type 'number'.
     let noTupleCall = call(f, 17);
-                      ~~~~
-!!! error TS2453: The type argument for type parameter '{ ... }' cannot be inferred from the usage. Consider specifying the type arguments explicitly.
-!!! error TS2453:   Type argument candidate '[number, string]' is not a valid type argument because it is not a supertype of candidate 'number'.
-!!! error TS2453:     Property '0' is missing in type 'Number'.
+                              ~~
+!!! error TS2345: Argument of type 'number' is not assignable to parameter of type '[number, string]'.
+!!! error TS2345:   Property '0' is missing in type 'Number'.
     
     let k = new K<[number, string], number>();
     let noArgsNestedCall = k.uselessNestedCall(f, []);
                                                   ~~
 !!! error TS2345: Argument of type 'undefined[]' is not assignable to parameter of type '[number, string]'.
-!!! error TS2345:   Property '0' is missing in type 'undefined[]'.
     let tooFewArgsNestedCall = k.uselessNestedCall(f, [18]);
                                                       ~~~~
 !!! error TS2345: Argument of type '[number]' is not assignable to parameter of type '[number, string]'.
@@ -144,12 +138,12 @@ tests/cases/compiler/tupleKindsCheckerErrors.ts(49,5): error TS2322: Type 'C' is
     let acceptRestType = tuple(4, "qux", false, new C());
     let compareRestType: [number, string, boolean, C] = acceptRestType;
         ~~~~~~~~~~~~~~~
-!!! error TS2322: Type 'C' is not assignable to type '[number, string, boolean, C]'.
-!!! error TS2322:   Property '0' is missing in type 'C'.
+!!! error TS2322: Type '{}' is not assignable to type '[number, string, boolean, C]'.
+!!! error TS2322:   Property '0' is missing in type '{}'.
     let restTypeArguments: [number, string, boolean, C] = tuple<[number, string, boolean, C]>(5, "quack", false, new C());
     let inferredRestType: [number, string, boolean, C] = tuple(6, "sequim", false, new C());
         ~~~~~~~~~~~~~~~~
-!!! error TS2322: Type 'C' is not assignable to type '[number, string, boolean, C]'.
+!!! error TS2322: Type '{}' is not assignable to type '[number, string, boolean, C]'.
     
     function spreadIntoUnionNotSupportedYet<...T>(tuple: number | ...T): number {
         if(typeof tuple === 'number') {

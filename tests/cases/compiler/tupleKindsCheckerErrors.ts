@@ -4,7 +4,6 @@ function tupleId<...V>(y:...V): ...V {
     // binds, infers and returns a tuple kind
     return y;
 }
-let ycleptNoTupleId = tupleId(200);
 function call<...T,U>(f: (ts:...T) => U, ts:...T): U {
     // binds, infers a tuple kind, then goes back to fill it in for a function argument
     return f(ts);
