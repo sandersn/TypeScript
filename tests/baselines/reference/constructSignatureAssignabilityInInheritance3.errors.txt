@@ -10,7 +10,7 @@ tests/cases/conformance/types/typeRelationships/assignmentCompatibility/construc
       Signature 'new (x: (arg: Base) => Derived, y: (arg2: Base) => Derived): (r: Base) => Derived' has no corresponding signature in 'new <T extends Base, U extends Derived>(x: (arg: T) => U, y: (arg2: { foo: number; }) => U) => (r: T) => U'
         Types of parameters 'y' and 'y' are incompatible.
           Type '(arg2: { foo: number; }) => any' is not assignable to type '(arg2: Base) => Derived'.
-            Signature 'new (arg2: Base): Derived' has no corresponding signature in '(arg2: { foo: number; }) => any'
+            Signature '(arg2: Base): Derived' has no corresponding signature in '(arg2: { foo: number; }) => any'
               Types of parameters 'arg2' and 'arg2' are incompatible.
                 Type '{ foo: number; }' is not assignable to type 'Base'.
                   Types of property 'foo' are incompatible.
@@ -82,7 +82,7 @@ tests/cases/conformance/types/typeRelationships/assignmentCompatibility/construc
 !!! error TS2430:       Signature 'new (x: (arg: Base) => Derived, y: (arg2: Base) => Derived): (r: Base) => Derived' has no corresponding signature in 'new <T extends Base, U extends Derived>(x: (arg: T) => U, y: (arg2: { foo: number; }) => U) => (r: T) => U'
 !!! error TS2430:         Types of parameters 'y' and 'y' are incompatible.
 !!! error TS2430:           Type '(arg2: { foo: number; }) => any' is not assignable to type '(arg2: Base) => Derived'.
-!!! error TS2430:             Signature 'new (arg2: Base): Derived' has no corresponding signature in '(arg2: { foo: number; }) => any'
+!!! error TS2430:             Signature '(arg2: Base): Derived' has no corresponding signature in '(arg2: { foo: number; }) => any'
 !!! error TS2430:               Types of parameters 'arg2' and 'arg2' are incompatible.
 !!! error TS2430:                 Type '{ foo: number; }' is not assignable to type 'Base'.
 !!! error TS2430:                   Types of property 'foo' are incompatible.

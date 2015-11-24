@@ -1,5 +1,5 @@
 tests/cases/conformance/classes/propertyMemberDeclarations/memberFunctionDeclarations/staticMemberAssignsToConstructorFunctionMembers.ts(7,9): error TS2322: Type '() => void' is not assignable to type '(x: number) => number'.
-  Signature 'new (x: number): number' has no corresponding signature in '() => void'
+  Signature '(x: number): number' has no corresponding signature in '() => void'
     Type 'void' is not assignable to type 'number'.
 
 
@@ -13,7 +13,7 @@ tests/cases/conformance/classes/propertyMemberDeclarations/memberFunctionDeclara
             C.bar = () => { } // error
             ~~~~~
 !!! error TS2322: Type '() => void' is not assignable to type '(x: number) => number'.
-!!! error TS2322:   Signature 'new (x: number): number' has no corresponding signature in '() => void'
+!!! error TS2322:   Signature '(x: number): number' has no corresponding signature in '() => void'
 !!! error TS2322:     Type 'void' is not assignable to type 'number'.
             C.bar = (x) => x; // ok
             C.bar = (x: number) => 1; // ok

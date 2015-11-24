@@ -1,7 +1,7 @@
 tests/cases/compiler/genericTypeWithNonGenericBaseMisMatch.ts(4,7): error TS2420: Class 'X<T>' incorrectly implements interface 'I'.
   Types of property 'f' are incompatible.
     Type '(a: T) => void' is not assignable to type '(a: { a: number; }) => void'.
-      Signature 'new (a: { a: number; }): void' has no corresponding signature in '(a: T) => void'
+      Signature '(a: { a: number; }): void' has no corresponding signature in '(a: T) => void'
         Types of parameters 'a' and 'a' are incompatible.
           Type 'T' is not assignable to type '{ a: number; }'.
             Type '{ a: string; }' is not assignable to type '{ a: number; }'.
@@ -10,7 +10,7 @@ tests/cases/compiler/genericTypeWithNonGenericBaseMisMatch.ts(4,7): error TS2420
 tests/cases/compiler/genericTypeWithNonGenericBaseMisMatch.ts(8,5): error TS2322: Type 'X<{ a: string; }>' is not assignable to type 'I'.
   Types of property 'f' are incompatible.
     Type '(a: { a: string; }) => void' is not assignable to type '(a: { a: number; }) => void'.
-      Signature 'new (a: { a: number; }): void' has no corresponding signature in '(a: { a: string; }) => void'
+      Signature '(a: { a: number; }): void' has no corresponding signature in '(a: { a: string; }) => void'
         Types of parameters 'a' and 'a' are incompatible.
           Type '{ a: string; }' is not assignable to type '{ a: number; }'.
             Types of property 'a' are incompatible.
@@ -26,7 +26,7 @@ tests/cases/compiler/genericTypeWithNonGenericBaseMisMatch.ts(8,5): error TS2322
 !!! error TS2420: Class 'X<T>' incorrectly implements interface 'I'.
 !!! error TS2420:   Types of property 'f' are incompatible.
 !!! error TS2420:     Type '(a: T) => void' is not assignable to type '(a: { a: number; }) => void'.
-!!! error TS2420:       Signature 'new (a: { a: number; }): void' has no corresponding signature in '(a: T) => void'
+!!! error TS2420:       Signature '(a: { a: number; }): void' has no corresponding signature in '(a: T) => void'
 !!! error TS2420:         Types of parameters 'a' and 'a' are incompatible.
 !!! error TS2420:           Type 'T' is not assignable to type '{ a: number; }'.
 !!! error TS2420:             Type '{ a: string; }' is not assignable to type '{ a: number; }'.
@@ -40,7 +40,7 @@ tests/cases/compiler/genericTypeWithNonGenericBaseMisMatch.ts(8,5): error TS2322
 !!! error TS2322: Type 'X<{ a: string; }>' is not assignable to type 'I'.
 !!! error TS2322:   Types of property 'f' are incompatible.
 !!! error TS2322:     Type '(a: { a: string; }) => void' is not assignable to type '(a: { a: number; }) => void'.
-!!! error TS2322:       Signature 'new (a: { a: number; }): void' has no corresponding signature in '(a: { a: string; }) => void'
+!!! error TS2322:       Signature '(a: { a: number; }): void' has no corresponding signature in '(a: { a: string; }) => void'
 !!! error TS2322:         Types of parameters 'a' and 'a' are incompatible.
 !!! error TS2322:           Type '{ a: string; }' is not assignable to type '{ a: number; }'.
 !!! error TS2322:             Types of property 'a' are incompatible.

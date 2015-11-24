@@ -3,7 +3,7 @@ tests/cases/compiler/interfaceImplementation7.ts(4,11): error TS2320: Interface 
 tests/cases/compiler/interfaceImplementation7.ts(7,7): error TS2420: Class 'C1' incorrectly implements interface 'i4'.
   Types of property 'name' are incompatible.
     Type '() => string' is not assignable to type '() => { s: string; n: number; }'.
-      Signature 'new (): { s: string; n: number; }' has no corresponding signature in '() => string'
+      Signature '(): { s: string; n: number; }' has no corresponding signature in '() => string'
         Type 'string' is not assignable to type '{ s: string; n: number; }'.
           Property 's' is missing in type 'String'.
 
@@ -23,7 +23,7 @@ tests/cases/compiler/interfaceImplementation7.ts(7,7): error TS2420: Class 'C1' 
 !!! error TS2420: Class 'C1' incorrectly implements interface 'i4'.
 !!! error TS2420:   Types of property 'name' are incompatible.
 !!! error TS2420:     Type '() => string' is not assignable to type '() => { s: string; n: number; }'.
-!!! error TS2420:       Signature 'new (): { s: string; n: number; }' has no corresponding signature in '() => string'
+!!! error TS2420:       Signature '(): { s: string; n: number; }' has no corresponding signature in '() => string'
 !!! error TS2420:         Type 'string' is not assignable to type '{ s: string; n: number; }'.
 !!! error TS2420:           Property 's' is missing in type 'String'.
         public name(): string { return ""; }

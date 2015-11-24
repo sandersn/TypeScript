@@ -4,16 +4,16 @@ tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConst
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(32,34): error TS2304: Cannot find name 'Window'.
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(34,15): error TS2304: Cannot find name 'Window'.
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(41,35): error TS2345: Argument of type '(x: string) => string' is not assignable to parameter of type '(x: number) => void'.
-  Signature 'new (x: number): void' has no corresponding signature in '(x: string) => string'
+  Signature '(x: number): void' has no corresponding signature in '(x: string) => string'
     Types of parameters 'x' and 'x' are incompatible.
       Type 'string' is not assignable to type 'number'.
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(48,35): error TS2345: Argument of type '(x: string) => string' is not assignable to parameter of type '(x: number) => void'.
-  Signature 'new (x: number): void' has no corresponding signature in '(x: string) => string'
+  Signature '(x: number): void' has no corresponding signature in '(x: string) => string'
     Types of parameters 'x' and 'x' are incompatible.
       Type 'string' is not assignable to type 'number'.
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(49,15): error TS2344: Type 'string' does not satisfy the constraint 'number'.
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(55,41): error TS2345: Argument of type '(n: string) => string' is not assignable to parameter of type '(b: number) => number'.
-  Signature 'new (b: number): number' has no corresponding signature in '(n: string) => string'
+  Signature '(b: number): number' has no corresponding signature in '(n: string) => string'
     Types of parameters 'n' and 'b' are incompatible.
       Type 'string' is not assignable to type 'number'.
 tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConstraints.ts(66,31): error TS2345: Argument of type '<A, B extends string, C>(a: (a: A) => A, b: (b: B) => B, c: (c: C) => C) => void' is not assignable to parameter of type 'string'.
@@ -83,7 +83,7 @@ tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConst
     someGenerics4<string, number>('', (x: string) => ''); // Error
                                       ~~~~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type '(x: string) => string' is not assignable to parameter of type '(x: number) => void'.
-!!! error TS2345:   Signature 'new (x: number): void' has no corresponding signature in '(x: string) => string'
+!!! error TS2345:   Signature '(x: number): void' has no corresponding signature in '(x: string) => string'
 !!! error TS2345:     Types of parameters 'x' and 'x' are incompatible.
 !!! error TS2345:       Type 'string' is not assignable to type 'number'.
     someGenerics4<string, number>(null, null);
@@ -95,7 +95,7 @@ tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConst
     someGenerics5<number, string>('', (x: string) => ''); // Error
                                       ~~~~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type '(x: string) => string' is not assignable to parameter of type '(x: number) => void'.
-!!! error TS2345:   Signature 'new (x: number): void' has no corresponding signature in '(x: string) => string'
+!!! error TS2345:   Signature '(x: number): void' has no corresponding signature in '(x: string) => string'
 !!! error TS2345:     Types of parameters 'x' and 'x' are incompatible.
 !!! error TS2345:       Type 'string' is not assignable to type 'number'.
     someGenerics5<string, number>(null, null); // Error
@@ -109,7 +109,7 @@ tests/cases/conformance/expressions/functionCalls/typeArgumentInferenceWithConst
     someGenerics6<number>((n: number) => n, (n: string) => n, (n: number) => n); // Error
                                             ~~~~~~~~~~~~~~~~
 !!! error TS2345: Argument of type '(n: string) => string' is not assignable to parameter of type '(b: number) => number'.
-!!! error TS2345:   Signature 'new (b: number): number' has no corresponding signature in '(n: string) => string'
+!!! error TS2345:   Signature '(b: number): number' has no corresponding signature in '(n: string) => string'
 !!! error TS2345:     Types of parameters 'n' and 'b' are incompatible.
 !!! error TS2345:       Type 'string' is not assignable to type 'number'.
     someGenerics6<number>((n: number) => n, (n: number) => n, (n: number) => n);
