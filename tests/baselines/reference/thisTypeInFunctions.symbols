@@ -13,6 +13,7 @@ class C {
 
         return this.n + m;
 >this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 3, 28))
     }
@@ -22,6 +23,7 @@ class C {
 
         return this.n + m;
 >this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 6, 17))
     }
@@ -33,6 +35,7 @@ class C {
 
         return this.n + m;
 >this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 9, 22))
     }
@@ -44,6 +47,7 @@ class C {
 
         return this.n + m;
 >this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 12, 28))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 12, 26))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 12, 28))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 12, 39))
     }
@@ -109,6 +113,7 @@ function explicitStructural(this: { y: number }, x: number): number {
     return x + this.y;
 >x : Symbol(x, Decl(thisTypeInFunctions.ts, 33, 48))
 >this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 35))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 33, 33))
 >y : Symbol(y, Decl(thisTypeInFunctions.ts, 33, 35))
 }
 function justThis(this: { y: number }): number {
@@ -118,6 +123,7 @@ function justThis(this: { y: number }): number {
 
     return this.y;
 >this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 36, 25))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 36, 23))
 >y : Symbol(y, Decl(thisTypeInFunctions.ts, 36, 25))
 }
 function implicitThis(n: number): number {
@@ -144,6 +150,7 @@ let impl: I = {
 
         return this.a;
 >this.a : Symbol(a, Decl(thisTypeInFunctions.ts, 27, 30))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 27, 28))
 >a : Symbol(a, Decl(thisTypeInFunctions.ts, 27, 30))
 
     },
@@ -152,6 +159,7 @@ let impl: I = {
 
         return this.a;
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 
     },
@@ -160,6 +168,7 @@ let impl: I = {
 
         return this.a;
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 
     },
@@ -168,6 +177,7 @@ let impl: I = {
 
         return this.a;
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 
     },
@@ -189,6 +199,7 @@ impl.explicitStructural = function() { return this.a; };
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >explicitStructural : Symbol(I.explicitStructural, Decl(thisTypeInFunctions.ts, 26, 38))
 >this.a : Symbol(a, Decl(thisTypeInFunctions.ts, 27, 30))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 27, 28))
 >a : Symbol(a, Decl(thisTypeInFunctions.ts, 27, 30))
 
 impl.explicitInterface = function() { return this.a; };
@@ -196,6 +207,7 @@ impl.explicitInterface = function() { return this.a; };
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >explicitInterface : Symbol(I.explicitInterface, Decl(thisTypeInFunctions.ts, 27, 50))
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 
 impl.explicitStructural = () => 12;
@@ -213,6 +225,7 @@ impl.explicitThis = function () { return this.a; };
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >explicitThis : Symbol(I.explicitThis, Decl(thisTypeInFunctions.ts, 28, 39))
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 
 impl.implicitMethod = function () { return this.a; };
@@ -220,6 +233,7 @@ impl.implicitMethod = function () { return this.a; };
 >impl : Symbol(impl, Decl(thisTypeInFunctions.ts, 42, 3))
 >implicitMethod : Symbol(I.implicitMethod, Decl(thisTypeInFunctions.ts, 29, 37))
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 
 impl.implicitMethod = () => 12;
@@ -476,6 +490,7 @@ c.explicitC = function(this: C, m: number) { return this.n + m };
 >C : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 120, 31))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 120, 31))
 
@@ -493,6 +508,7 @@ c.explicitProperty = function(this: {n: number}, m: number) { return this.n + m 
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 122, 37))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 122, 48))
 >this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 122, 37))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 122, 35))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 122, 37))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 122, 48))
 
@@ -564,6 +580,7 @@ c.explicitThis = function(this: C, m: number) { return this.n + m };
 >C : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 138, 34))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 138, 34))
 
@@ -574,6 +591,7 @@ c.explicitC = function(m: number) { return this.n + m };
 >explicitC : Symbol(C.explicitC, Decl(thisTypeInFunctions.ts, 8, 5))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 141, 23))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 141, 23))
 
@@ -583,6 +601,7 @@ c.explicitProperty = function(m: number) { return this.n + m };
 >explicitProperty : Symbol(C.explicitProperty, Decl(thisTypeInFunctions.ts, 11, 5))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 142, 30))
 >this.n : Symbol(n, Decl(thisTypeInFunctions.ts, 12, 28))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 12, 26))
 >n : Symbol(n, Decl(thisTypeInFunctions.ts, 12, 28))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 142, 30))
 
@@ -592,6 +611,7 @@ c.explicitThis = function(m: number) { return this.n + m };
 >explicitThis : Symbol(C.explicitThis, Decl(thisTypeInFunctions.ts, 2, 14))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 143, 26))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 143, 26))
 
@@ -601,6 +621,7 @@ c.implicitThis = function(m: number) { return this.n + m };
 >implicitThis : Symbol(C.implicitThis, Decl(thisTypeInFunctions.ts, 5, 5))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 144, 26))
 >this.n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
+>this : Symbol(C, Decl(thisTypeInFunctions.ts, 0, 0))
 >n : Symbol(C.n, Decl(thisTypeInFunctions.ts, 1, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 144, 26))
 
@@ -620,6 +641,7 @@ c.explicitC = function(this: B, m: number) { return this.n + m };
 >B : Symbol(B, Decl(thisTypeInFunctions.ts, 19, 21))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 147, 31))
 >this.n : Symbol(B.n, Decl(thisTypeInFunctions.ts, 20, 9))
+>this : Symbol(B, Decl(thisTypeInFunctions.ts, 19, 21))
 >n : Symbol(B.n, Decl(thisTypeInFunctions.ts, 20, 9))
 >m : Symbol(m, Decl(thisTypeInFunctions.ts, 147, 31))
 
@@ -641,6 +663,7 @@ class Base1 {
     public implicit(): number { return this.x; }
 >implicit : Symbol(implicit, Decl(thisTypeInFunctions.ts, 154, 14))
 >this.x : Symbol(x, Decl(thisTypeInFunctions.ts, 153, 13))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >x : Symbol(x, Decl(thisTypeInFunctions.ts, 153, 13))
 
     explicit(this: Base1): number { return this.x; }
@@ -648,11 +671,13 @@ class Base1 {
 >this : Symbol(this, Decl(thisTypeInFunctions.ts, 156, 13))
 >Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >this.x : Symbol(x, Decl(thisTypeInFunctions.ts, 153, 13))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >x : Symbol(x, Decl(thisTypeInFunctions.ts, 153, 13))
 
     static implicitStatic(): number { return this.y; }
 >implicitStatic : Symbol(Base1.implicitStatic, Decl(thisTypeInFunctions.ts, 156, 52))
 >this.y : Symbol(Base1.y, Decl(thisTypeInFunctions.ts, 158, 72))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >y : Symbol(Base1.y, Decl(thisTypeInFunctions.ts, 158, 72))
 
     static explicitStatic(this: typeof Base1): number { return this.y; }
@@ -660,6 +685,7 @@ class Base1 {
 >this : Symbol(this, Decl(thisTypeInFunctions.ts, 158, 26))
 >Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >this.y : Symbol(Base1.y, Decl(thisTypeInFunctions.ts, 158, 72))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >y : Symbol(Base1.y, Decl(thisTypeInFunctions.ts, 158, 72))
 
     static y: number;
@@ -682,6 +708,7 @@ class Base2 {
     implicit(): number { return this.y; }
 >implicit : Symbol(implicit, Decl(thisTypeInFunctions.ts, 166, 13))
 >this.y : Symbol(y, Decl(thisTypeInFunctions.ts, 165, 13))
+>this : Symbol(Base2, Decl(thisTypeInFunctions.ts, 164, 1))
 >y : Symbol(y, Decl(thisTypeInFunctions.ts, 165, 13))
 
     explicit(this: Base1): number { return this.x; }
@@ -689,6 +716,7 @@ class Base2 {
 >this : Symbol(this, Decl(thisTypeInFunctions.ts, 168, 13))
 >Base1 : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >this.x : Symbol(Base1.x, Decl(thisTypeInFunctions.ts, 153, 13))
+>this : Symbol(Base1, Decl(thisTypeInFunctions.ts, 150, 24))
 >x : Symbol(Base1.x, Decl(thisTypeInFunctions.ts, 153, 13))
 }
 class Derived2 extends Base2 {
@@ -771,6 +799,7 @@ function InterfaceThis(this: I) {
 
     this.a = 12;
 >this.a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
+>this : Symbol(I, Decl(thisTypeInFunctions.ts, 22, 1))
 >a : Symbol(I.a, Decl(thisTypeInFunctions.ts, 23, 13))
 }
 function LiteralTypeThis(this: {x: string}) {
@@ -780,6 +809,7 @@ function LiteralTypeThis(this: {x: string}) {
 
     this.x = "ok";
 >this.x : Symbol(x, Decl(thisTypeInFunctions.ts, 190, 32))
+>this : Symbol(, Decl(thisTypeInFunctions.ts, 190, 30))
 >x : Symbol(x, Decl(thisTypeInFunctions.ts, 190, 32))
 }
 function AnyThis(this: any) {
