@@ -5302,9 +5302,9 @@ namespace ts {
                 const t = target.thisType || anyType;
                 if (s !== voidType) {
                     // void sources are assignable to anything.
-                    let related = compareTypes(getApparentType(s), getApparentType(t), reportErrors);
+                    let related = compareTypes(getApparentType(t), getApparentType(s), reportErrors);
                     if (!related) {
-                        related = compareTypes(getApparentType(t), getApparentType(s), /*reportErrors*/ false);
+                        related = compareTypes(getApparentType(s), getApparentType(t), /*reportErrors*/ false);
                         if (!related) {
                             errorReporter(Diagnostics.Types_of_parameters_0_and_1_are_incompatible, "this", "this");
                             return Ternary.False;
