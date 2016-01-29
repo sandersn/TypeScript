@@ -21,24 +21,32 @@
 ////        console.log(th/*6*/is);
 ////    }
 ////}
+////class Bar<T> {
+////    public implicitThis() {
+////        console.log(th/*7*/is);
+////    }
+////    public explicitThis(this: Bar<T>) {
+////        console.log(thi/*8*/s);
+////    }
+////}
 ////
 ////function implicitVoid(x: number): void {
-////    return th/*7*/is;
-////}
-////function explicitVoid(th/*8*/is: void, x: number): void {
 ////    return th/*9*/is;
 ////}
-////function explicitInterface(th/*10*/is: Restricted): void {
-////    console.log(thi/*11*/s);
+////function explicitVoid(th/*10*/is: void, x: number): void {
+////    return th/*11*/is;
 ////}
-////function explicitLiteral(th/*12*/is: { n: number }): void {
-////    console.log(th/*13*/is);
+////function explicitInterface(th/*12*/is: Restricted): void {
+////    console.log(thi/*13*/s);
+////}
+////function explicitLiteral(th/*14*/is: { n: number }): void {
+////    console.log(th/*15*/is);
 ////}
 
 goTo.marker('1');
 verify.quickInfoIs('void');
 goTo.marker('2');
-verify.quickInfoIs('this: Foo');
+verify.quickInfoIs('this: this');
 goTo.marker('3');
 verify.quickInfoIs('(parameter) this: Restricted');
 goTo.marker('4');
@@ -48,17 +56,21 @@ verify.quickInfoIs('(parameter) this: Foo');
 goTo.marker('6');
 verify.quickInfoIs('this: Foo');
 goTo.marker('7');
-verify.quickInfoIs('void');
+verify.quickInfoIs('this: this');
 goTo.marker('8');
-verify.quickInfoIs('(parameter) this: void');
+verify.quickInfoIs('this: Bar<T>');
 goTo.marker('9');
 verify.quickInfoIs('void');
 goTo.marker('10');
-verify.quickInfoIs('(parameter) this: Restricted');
+verify.quickInfoIs('(parameter) this: void');
 goTo.marker('11');
-verify.quickInfoIs('this: Restricted');
+verify.quickInfoIs('void');
 goTo.marker('12');
+verify.quickInfoIs('(parameter) this: Restricted');
+goTo.marker('13');
+verify.quickInfoIs('this: Restricted');
+goTo.marker('14');
 
 verify.quickInfoIs('(parameter) this: {\n    n: number;\n}');
-goTo.marker('13');
+goTo.marker('15');
 verify.quickInfoIs('this: {\n    n: number;\n}');

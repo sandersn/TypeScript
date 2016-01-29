@@ -4353,38 +4353,39 @@ namespace ts {
                 if (symbolKind !== ScriptElementKind.unknown) {
                     if (type) {
                         if (isThisExpression) {
-                            addThisType(typeChecker, type);
+                            addNewLineIfDisplayPartsExist();
+                            displayParts.push(keywordPart(SyntaxKind.ThisKeyword));
                         }
                         else {
                             addPrefixForAnyFunctionOrVar(symbol, symbolKind);
+                        }
 
-                            // For properties, variables and local vars: show the type
-                            if (symbolKind === ScriptElementKind.memberVariableElement ||
-                                symbolFlags & SymbolFlags.Variable ||
-                                symbolKind === ScriptElementKind.localVariableElement ||
-                                isThisExpression) {
-                                displayParts.push(punctuationPart(SyntaxKind.ColonToken));
-                                displayParts.push(spacePart());
-                                // If the type is type parameter, format it specially
-                                if (type.symbol && type.symbol.flags & SymbolFlags.TypeParameter) {
-                                    const typeParameterParts = mapToDisplayParts(writer => {
-                                        typeChecker.getSymbolDisplayBuilder().buildTypeParameterDisplay(<TypeParameter>type, writer, enclosingDeclaration);
-                                    });
-                                    addRange(displayParts, typeParameterParts);
-                                }
-                                else {
-                                    addRange(displayParts, typeToDisplayParts(typeChecker, type, enclosingDeclaration));
-                                }
+                        // For properties, variables and local vars: show the type
+                        if (symbolKind === ScriptElementKind.memberVariableElement ||
+                            symbolFlags & SymbolFlags.Variable ||
+                            symbolKind === ScriptElementKind.localVariableElement ||
+                            isThisExpression) {
+                            displayParts.push(punctuationPart(SyntaxKind.ColonToken));
+                            displayParts.push(spacePart());
+                            // If the type is type parameter, format it specially
+                            if (type.symbol && type.symbol.flags & SymbolFlags.TypeParameter) {
+                                const typeParameterParts = mapToDisplayParts(writer => {
+                                    typeChecker.getSymbolDisplayBuilder().buildTypeParameterDisplay(<TypeParameter>type, writer, enclosingDeclaration);
+                                });
+                                addRange(displayParts, typeParameterParts);
                             }
-                            else if (symbolFlags & SymbolFlags.Function ||
-                                symbolFlags & SymbolFlags.Method ||
-                                symbolFlags & SymbolFlags.Constructor ||
-                                symbolFlags & SymbolFlags.Signature ||
-                                symbolFlags & SymbolFlags.Accessor ||
-                                symbolKind === ScriptElementKind.memberFunctionElement) {
-                                const allSignatures = type.getCallSignatures();
-                                addSignatureDisplayParts(allSignatures[0], allSignatures);
+                            else {
+                                addRange(displayParts, typeToDisplayParts(typeChecker, type, enclosingDeclaration));
                             }
+                        }
+                        else if (symbolFlags & SymbolFlags.Function ||
+                            symbolFlags & SymbolFlags.Method ||
+                            symbolFlags & SymbolFlags.Constructor ||
+                            symbolFlags & SymbolFlags.Signature ||
+                            symbolFlags & SymbolFlags.Accessor ||
+                            symbolKind === ScriptElementKind.memberFunctionElement) {
+                            const allSignatures = type.getCallSignatures();
+                            addSignatureDisplayParts(allSignatures[0], allSignatures);
                         }
                     }
                 }
@@ -4417,20 +4418,6 @@ namespace ts {
                     pushTypePart(symbolKind);
                     displayParts.push(spacePart());
                     addFullSymbolName(symbol);
-                }
-            }
-
-            function addThisType(typeChecker: TypeChecker, type: Type, enclosingDeclaration?: Node) {
-                addNewLineIfDisplayPartsExist();
-                displayParts.push(keywordPart(SyntaxKind.ThisKeyword));
-                displayParts.push(punctuationPart(SyntaxKind.ColonToken));
-                displayParts.push(spacePart());
-                if (type.symbol.flags & SymbolFlags.TypeLiteral) {
-                    const fullSymbolDisplayParts = typeToDisplayParts(typeChecker, type, enclosingDeclaration || sourceFile, TypeFormatFlags.InElementType);
-                    addRange(displayParts, fullSymbolDisplayParts);
-                }
-                else {
-                    addFullSymbolName(type.symbol);
                 }
             }
 
