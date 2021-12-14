@@ -34200,6 +34200,8 @@ namespace ts {
                     error(node, Diagnostics.get_and_set_accessors_cannot_declare_this_parameters);
                 }
             }
+            if (node.initializer)
+                error(node, Diagnostics.The_arguments_object_cannot_be_referenced_in_an_arrow_function_in_ES3_and_ES5_Consider_using_a_standard_function_expression);
 
             // Only check rest parameter type if it's not a binding pattern. Since binding patterns are
             // not allowed in a rest parameter, we already have an error from checkGrammarParameterList.
