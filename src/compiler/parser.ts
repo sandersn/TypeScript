@@ -2596,11 +2596,21 @@ namespace Parser {
         return array;
     }
 
-    function finishNode<T extends Node>(node: T, pos: number, end?: number): T {
+    function finishNode<T extends Node>(node: T, pos: number, end?: number, log: boolean | object = false): T {
         setTextRangePosEnd(node, pos, end ?? scanner.getTokenFullStart());
         if (contextFlags) {
             (node as Mutable<T>).flags |= contextFlags;
         }
+        if (log) {
+            console.error(JSON.stringify({
+                type: Debug.formatSyntaxKind(node.kind),
+                position: {
+                    start: pos,
+                    end
+                },
+                fileName,
+                ...(typeof log === "object" ? log : undefined)
+            }));       }
 
         // Keep track on the node if we encountered an error while parsing it.  If we did, then
         // we cannot reuse the node incrementally.  Once we've marked this node, clear out the
@@ -3835,13 +3845,13 @@ namespace Parser {
     function parseJSDocAllType(): JSDocAllType | JSDocOptionalType {
         const pos = getNodePos();
         nextToken();
-        return finishNode(factory.createJSDocAllType(), pos);
+        return finishNode(factory.createJSDocAllType(), pos, /*end*/ undefined, /*log*/ true);
     }
 
     function parseJSDocNonNullableType(): TypeNode {
         const pos = getNodePos();
         nextToken();
-        return finishNode(factory.createJSDocNonNullableType(parseNonArrayType(), /*postfix*/ false), pos);
+        return finishNode(factory.createJSDocNonNullableType(parseNonArrayType(), /*postfix*/ false), pos, /*end*/ undefined, /*log*/ true);
     }
 
     function parseJSDocUnknownOrNullableType(): JSDocUnknownType | JSDocNullableType {
@@ -3867,10 +3877,10 @@ namespace Parser {
             token() === SyntaxKind.EqualsToken ||
             token() === SyntaxKind.BarToken
         ) {
-            return finishNode(factory.createJSDocUnknownType(), pos);
+            return finishNode(factory.createJSDocUnknownType(), pos, /*end*/ undefined, /*log*/ true);
         }
         else {
-            return finishNode(factory.createJSDocNullableType(parseType(), /*postfix*/ false), pos);
+            return finishNode(factory.createJSDocNullableType(parseType(), /*postfix*/ false), pos, /*end*/ undefined, /*log*/ true);
         }
     }
 
@@ -3882,7 +3892,7 @@ namespace Parser {
             const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
             return withJSDoc(finishNode(factory.createJSDocFunctionType(parameters, type), pos), hasJSDoc);
         }
-        return finishNode(factory.createTypeReferenceNode(parseIdentifierName(), /*typeArguments*/ undefined), pos);
+        return finishNode(factory.createTypeReferenceNode(parseIdentifierName(), /*typeArguments*/ undefined), pos, /*end*/ undefined, /*log*/ true);
     }
 
     function parseJSDocParameter(): ParameterDeclaration {
@@ -3926,18 +3936,18 @@ namespace Parser {
             }
 
             scanner.setSkipJsDocLeadingAsterisks(false);
-            return finishNode(moduleTag, pos);
+            return finishNode(moduleTag, pos, /*end*/ undefined, /*log*/ true);
         }
 
         const hasDotDotDot = parseOptional(SyntaxKind.DotDotDotToken);
         let type = parseTypeOrTypePredicate();
         scanner.setSkipJsDocLeadingAsterisks(false);
         if (hasDotDotDot) {
-            type = finishNode(factory.createJSDocVariadicType(type), pos);
+            type = finishNode(factory.createJSDocVariadicType(type), pos, /*end*/ undefined, /*log*/ true);
         }
         if (token() === SyntaxKind.EqualsToken) {
             nextToken();
-            return finishNode(factory.createJSDocOptionalType(type), pos);
+            return finishNode(factory.createJSDocOptionalType(type), pos, /*end*/ undefined, /*log*/ true);
         }
         return type;
     }
@@ -4718,7 +4728,7 @@ namespace Parser {
             switch (token()) {
                 case SyntaxKind.ExclamationToken:
                     nextToken();
-                    type = finishNode(factory.createJSDocNonNullableType(type, /*postfix*/ true), pos);
+                    type = finishNode(factory.createJSDocNonNullableType(type, /*postfix*/ true), pos, /*end*/ undefined, /*log*/ { postfix: true });
                     break;
                 case SyntaxKind.QuestionToken:
                     // If next token is start of a type we have a conditional type
@@ -4726,7 +4736,7 @@ namespace Parser {
                         return type;
                     }
                     nextToken();
-                    type = finishNode(factory.createJSDocNullableType(type, /*postfix*/ true), pos);
+                    type = finishNode(factory.createJSDocNullableType(type, /*postfix*/ true), pos, /*end*/ undefined, /*log*/ { postfix: true });
                     break;
                 case SyntaxKind.OpenBracketToken:
                     parseExpected(SyntaxKind.OpenBracketToken);
@@ -8788,7 +8798,7 @@ namespace Parser {
             while (token() === SyntaxKind.PrivateIdentifier) {
                 reScanHashToken(); // rescan #id as # id
                 nextTokenJSDoc(); // then skip the #
-                entityName = finishNode(factory.createJSDocMemberName(entityName, parseIdentifier()), p2);
+                entityName = finishNode(factory.createJSDocMemberName(entityName, parseIdentifier()), p2, /*end*/ undefined, /*log*/ true);
             }
             if (hasBrace) {
                 parseExpectedJSDoc(SyntaxKind.CloseBraceToken);
@@ -8796,7 +8806,7 @@ namespace Parser {
 
             const result = factory.createJSDocNameReference(entityName);
             fixupParentReferences(result);
-            return finishNode(result, pos);
+            return finishNode(result, pos, /*end*/ undefined, /*log*/ true);
         }
 
         export function parseIsolatedJSDocComment(content: string, start: number | undefined, length: number | undefined): { jsDoc: JSDoc; diagnostics: Diagnostic[]; } | undefined {
@@ -9206,7 +9216,7 @@ namespace Parser {
                             const linkStart = scanner.getTokenEnd() - 1;
                             const link = parseJSDocLink(linkStart);
                             if (link) {
-                                parts.push(finishNode(factory.createJSDocText(comments.join("")), linkEnd ?? commentsPos, commentEnd));
+                                parts.push(finishNode(factory.createJSDocText(comments.join("")), linkEnd ?? commentsPos, commentEnd, /*log*/ true));
                                 parts.push(link);
                                 comments = [];
                                 linkEnd = scanner.getTokenEnd();
@@ -9258,7 +9268,7 @@ namespace Parser {
                 const trimmedComments = comments.join("").trimEnd();
                 if (parts.length) {
                     if (trimmedComments.length) {
-                        parts.push(finishNode(factory.createJSDocText(trimmedComments), linkEnd ?? commentsPos));
+                        parts.push(finishNode(factory.createJSDocText(trimmedComments), linkEnd ?? commentsPos, undefined, /*log*/ true));
                     }
                     return createNodeArray(parts, commentsPos, scanner.getTokenEnd());
                 }
@@ -9321,7 +9331,7 @@ namespace Parser {
             }
 
             function parseUnknownTag(start: number, tagName: Identifier, indent: number, indentText: string) {
-                return finishNode(factory.createJSDocUnknownTag(tagName, parseTrailingTagComments(start, getNodePos(), indent, indentText)), start);
+                return finishNode(factory.createJSDocUnknownTag(tagName, parseTrailingTagComments(start, getNodePos(), indent, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function addTag(tag: JSDocTag | undefined): void {
@@ -9401,7 +9411,7 @@ namespace Parser {
                 const result = target === PropertyLikeParse.Property
                     ? factory.createJSDocPropertyTag(tagName, name, isBracketed, typeExpression, isNameFirst, comment)
                     : factory.createJSDocParameterTag(tagName, name, isBracketed, typeExpression, isNameFirst, comment);
-                return finishNode(result, start);
+                return finishNode(result, start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseNestedTypeLiteral(typeExpression: JSDocTypeExpression | undefined, name: EntityName, target: PropertyLikeParse, indent: number) {
@@ -9418,7 +9428,7 @@ namespace Parser {
                         }
                     }
                     if (children) {
-                        const literal = finishNode(factory.createJSDocTypeLiteral(children, typeExpression.type.kind === SyntaxKind.ArrayType), pos);
+                        const literal = finishNode(factory.createJSDocTypeLiteral(children, typeExpression.type.kind === SyntaxKind.ArrayType), pos, /*end*/ undefined, /*log*/ true);
                         return finishNode(factory.createJSDocTypeExpression(literal), pos);
                     }
                 }
@@ -9430,7 +9440,7 @@ namespace Parser {
                 }
 
                 const typeExpression = tryParseTypeExpression();
-                return finishNode(factory.createJSDocReturnTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), indent, indentText)), start);
+                return finishNode(factory.createJSDocReturnTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), indent, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseTypeTag(start: number, tagName: Identifier, indent?: number, indentText?: string): JSDocTypeTag {
@@ -9440,7 +9450,7 @@ namespace Parser {
 
                 const typeExpression = parseJSDocTypeExpression(/*mayOmitBraces*/ true);
                 const comments = indent !== undefined && indentText !== undefined ? parseTrailingTagComments(start, getNodePos(), indent, indentText) : undefined;
-                return finishNode(factory.createJSDocTypeTag(tagName, typeExpression, comments), start);
+                return finishNode(factory.createJSDocTypeTag(tagName, typeExpression, comments), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseSeeTag(start: number, tagName: Identifier, indent?: number, indentText?: string): JSDocSeeTag {
@@ -9448,13 +9458,13 @@ namespace Parser {
                     || lookAhead(() => nextTokenJSDoc() === SyntaxKind.AtToken && tokenIsIdentifierOrKeyword(nextTokenJSDoc()) && isJSDocLinkTag(scanner.getTokenValue()));
                 const nameExpression = isMarkdownOrJSDocLink ? undefined : parseJSDocNameReference();
                 const comments = indent !== undefined && indentText !== undefined ? parseTrailingTagComments(start, getNodePos(), indent, indentText) : undefined;
-                return finishNode(factory.createJSDocSeeTag(tagName, nameExpression, comments), start);
+                return finishNode(factory.createJSDocSeeTag(tagName, nameExpression, comments), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseThrowsTag(start: number, tagName: Identifier, indent: number, indentText: string): JSDocThrowsTag {
                 const typeExpression = tryParseTypeExpression();
                 const comment = parseTrailingTagComments(start, getNodePos(), indent, indentText);
-                return finishNode(factory.createJSDocThrowsTag(tagName, typeExpression, comment), start);
+                return finishNode(factory.createJSDocThrowsTag(tagName, typeExpression, comment), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseAuthorTag(start: number, tagName: Identifier, indent: number, indentText: string): JSDocAuthorTag {
@@ -9468,7 +9478,7 @@ namespace Parser {
                 const allParts = typeof comments !== "string"
                     ? createNodeArray(concatenate([finishNode(textOnly, commentStart, commentEnd)], comments) as JSDocComment[], commentStart) // cast away readonly
                     : textOnly.text + comments;
-                return finishNode(factory.createJSDocAuthorTag(tagName, allParts), start);
+                return finishNode(factory.createJSDocAuthorTag(tagName, allParts), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseAuthorNameAndEmail(): JSDocText {
@@ -9496,18 +9506,18 @@ namespace Parser {
 
             function parseImplementsTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocImplementsTag {
                 const className = parseExpressionWithTypeArgumentsForAugments();
-                return finishNode(factory.createJSDocImplementsTag(tagName, className, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start);
+                return finishNode(factory.createJSDocImplementsTag(tagName, className, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseAugmentsTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocAugmentsTag {
                 const className = parseExpressionWithTypeArgumentsForAugments();
-                return finishNode(factory.createJSDocAugmentsTag(tagName, className, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start);
+                return finishNode(factory.createJSDocAugmentsTag(tagName, className, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseSatisfiesTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocSatisfiesTag {
                 const typeExpression = parseJSDocTypeExpression(/*mayOmitBraces*/ false);
                 const comments = margin !== undefined && indentText !== undefined ? parseTrailingTagComments(start, getNodePos(), margin, indentText) : undefined;
-                return finishNode(factory.createJSDocSatisfiesTag(tagName, typeExpression, comments), start);
+                return finishNode(factory.createJSDocSatisfiesTag(tagName, typeExpression, comments), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseImportTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocImportTag {
@@ -9523,7 +9533,7 @@ namespace Parser {
                 const attributes = tryParseImportAttributes();
 
                 const comments = margin !== undefined && indentText !== undefined ? parseTrailingTagComments(start, getNodePos(), margin, indentText) : undefined;
-                return finishNode(factory.createJSDocImportTag(tagName, importClause, moduleSpecifier, attributes, comments), start);
+                return finishNode(factory.createJSDocImportTag(tagName, importClause, moduleSpecifier, attributes, comments), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseExpressionWithTypeArgumentsForAugments(): ExpressionWithTypeArguments & { expression: Identifier | PropertyAccessEntityNameExpression; } {
@@ -9552,13 +9562,13 @@ namespace Parser {
             }
 
             function parseSimpleTag(start: number, createTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocComment>) => JSDocTag, tagName: Identifier, margin: number, indentText: string): JSDocTag {
-                return finishNode(createTag(tagName, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start);
+                return finishNode(createTag(tagName, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseThisTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocThisTag {
                 const typeExpression = parseJSDocTypeExpression(/*mayOmitBraces*/ true);
                 skipWhitespace();
-                return finishNode(factory.createJSDocThisTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start);
+                return finishNode(factory.createJSDocThisTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseEnumTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocEnumTag {
@@ -9607,7 +9617,7 @@ namespace Parser {
                         const jsdocTypeLiteral = factory.createJSDocTypeLiteral(jsDocPropertyTags, isArrayType);
                         typeExpression = childTypeTag && childTypeTag.typeExpression && !isObjectOrObjectArrayTypeReference(childTypeTag.typeExpression.type) ?
                             childTypeTag.typeExpression :
-                            finishNode(jsdocTypeLiteral, start);
+                            finishNode(jsdocTypeLiteral, start, /*end*/ undefined, /*log*/ true);
                         end = typeExpression.end;
                     }
                 }
@@ -9622,7 +9632,7 @@ namespace Parser {
                 }
 
                 const typedefTag = factory.createJSDocTypedefTag(tagName, typeExpression, fullName, comment);
-                return finishNode(typedefTag, start, end);
+                return finishNode(typedefTag, start, end, /*log*/ true);
             }
 
             function parseJSDocTypeNameWithNamespace(nested?: boolean) {
@@ -9672,7 +9682,7 @@ namespace Parser {
                         }
                     }
                 });
-                return finishNode(factory.createJSDocSignature(/*typeParameters*/ undefined, parameters, returnTag), start);
+                return finishNode(factory.createJSDocSignature(/*typeParameters*/ undefined, parameters, returnTag), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseCallbackTag(start: number, tagName: Identifier, indent: number, indentText: string): JSDocCallbackTag {
@@ -9684,7 +9694,7 @@ namespace Parser {
                     comment = parseTrailingTagComments(start, getNodePos(), indent, indentText);
                 }
                 const end = comment !== undefined ? getNodePos() : typeExpression.end;
-                return finishNode(factory.createJSDocCallbackTag(tagName, typeExpression, fullName, comment), start, end);
+                return finishNode(factory.createJSDocCallbackTag(tagName, typeExpression, fullName, comment), start, end, /*log*/ true);
             }
 
             function parseOverloadTag(start: number, tagName: Identifier, indent: number, indentText: string): JSDocOverloadTag {
@@ -9837,7 +9847,7 @@ namespace Parser {
                 // TODO: Consider only parsing a single type parameter if there is a constraint.
                 const constraint = token() === SyntaxKind.OpenBraceToken ? parseJSDocTypeExpression() : undefined;
                 const typeParameters = parseTemplateTagTypeParameters();
-                return finishNode(factory.createJSDocTemplateTag(tagName, constraint, typeParameters, parseTrailingTagComments(start, getNodePos(), indent, indentText)), start);
+                return finishNode(factory.createJSDocTemplateTag(tagName, constraint, typeParameters, parseTrailingTagComments(start, getNodePos(), indent, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseOptionalJsdoc(t: JSDocSyntaxKind): boolean {
