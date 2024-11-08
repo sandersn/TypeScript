@@ -3890,7 +3890,7 @@ namespace Parser {
         if (tryParse(nextTokenIsOpenParen)) {
             const parameters = parseParameters(SignatureFlags.Type | SignatureFlags.JSDoc);
             const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
-            return withJSDoc(finishNode(factory.createJSDocFunctionType(parameters, type), pos), hasJSDoc);
+            return withJSDoc(finishNode(factory.createJSDocFunctionType(parameters, type), pos, /*end*/ undefined, /*log*/ true), hasJSDoc);
         }
         return finishNode(factory.createTypeReferenceNode(parseIdentifierName(), /*typeArguments*/ undefined), pos, /*end*/ undefined, /*log*/ true);
     }
@@ -9574,7 +9574,7 @@ namespace Parser {
             function parseEnumTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocEnumTag {
                 const typeExpression = parseJSDocTypeExpression(/*mayOmitBraces*/ true);
                 skipWhitespace();
-                return finishNode(factory.createJSDocEnumTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start);
+                return finishNode(factory.createJSDocEnumTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start, /*end*/ undefined, /*log*/ true);
             }
 
             function parseTypedefTag(start: number, tagName: Identifier, indent: number, indentText: string): JSDocTypedefTag {
@@ -9705,7 +9705,7 @@ namespace Parser {
                     comment = parseTrailingTagComments(start, getNodePos(), indent, indentText);
                 }
                 const end = comment !== undefined ? getNodePos() : typeExpression.end;
-                return finishNode(factory.createJSDocOverloadTag(tagName, typeExpression, comment), start, end);
+                return finishNode(factory.createJSDocOverloadTag(tagName, typeExpression, comment), start, end, /*log*/ true);
             }
 
             function escapedTextsEqual(a: EntityName, b: EntityName): boolean {
