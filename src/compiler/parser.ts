@@ -9564,6 +9564,7 @@ namespace Parser {
             function parseEnumTag(start: number, tagName: Identifier, margin: number, indentText: string): JSDocEnumTag {
                 const typeExpression = parseJSDocTypeExpression(/*mayOmitBraces*/ true);
                 skipWhitespace();
+                console.error(JSON.stringify({ type: "JSDocEnumTag", position: { start, end }, fileName }));
                 return finishNode(factory.createJSDocEnumTag(tagName, typeExpression, parseTrailingTagComments(start, getNodePos(), margin, indentText)), start);
             }
 

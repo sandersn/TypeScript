@@ -4021,6 +4021,10 @@ export function getAssignmentDeclarationKind(expr: BinaryExpression | CallExpres
     return special === AssignmentDeclarationKind.Property || isInJSFile(expr) ? special : AssignmentDeclarationKind.None;
 }
 
+export function le(type: string, node: Node, fileName: string, payload?: object): void {
+    console.error(JSON.stringify({ type, position: { start: node.pos, end: node.end }, fileName, ...payload }));
+}
+
 /** @internal */
 export function isBindableObjectDefinePropertyCall(expr: CallExpression): expr is BindableObjectDefinePropertyCall {
     return length(expr.arguments) === 3 &&
