@@ -4021,7 +4021,8 @@ export function getAssignmentDeclarationKind(expr: BinaryExpression | CallExpres
     return special === AssignmentDeclarationKind.Property || isInJSFile(expr) ? special : AssignmentDeclarationKind.None;
 }
 
-export function le(type: string, node: Node, fileName: string, payload?: object): void {
+export function le(type: string, node: Node, file: SourceFile, payload?: object): void {
+    const fileName = file?.fileName ?? "MISSING-PARENT-POINTER";
     console.error(JSON.stringify({ type, position: { start: node.pos, end: node.end }, fileName, ...payload }));
 }
 

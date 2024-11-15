@@ -738,7 +738,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JSDocFunctionType:
                 const con = isJSDocConstructSignature(node);
                 if (con) {
-                    le("function(new)", node, file.fileName);
+                    le("function(new)", node, file);
                 }
                 return (con ? InternalSymbolName.New : InternalSymbolName.Call);
             case SyntaxKind.Parameter:
@@ -2469,7 +2469,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 // typedef anchored to an A.B.C assignment - we need to bind into B's namespace under name C
                 const isTopLevel = isTopLevelNamespaceAssignment(declName.parent);
                 if (isTopLevel) {
-                    le("/** @typedef */p;", typeAlias, file.fileName);
+                    le("/** @typedef */p;", typeAlias, file);
                     bindPotentiallyMissingNamespaces("/** @typedef */p.q.r.T", file.symbol, declName.parent, isTopLevel, !!findAncestor(declName, d => isPropertyAccessExpression(d) && d.name.escapedText === "prototype"), /*containerIsClass*/ false);
                     const oldContainer = container;
                     switch (getAssignmentDeclarationPropertyAccessKind(declName.parent)) {
@@ -2911,23 +2911,23 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 const specialKind = getAssignmentDeclarationKind(node as BinaryExpression);
                 switch (specialKind) {
                     case AssignmentDeclarationKind.ExportsProperty:
-                        le("module.exports.p=", node, file.fileName);
+                        le("module.exports.p=", node, file);
                         bindExportsPropertyAssignment(node as BindableStaticPropertyAssignmentExpression);
                         break;
                     case AssignmentDeclarationKind.ModuleExports:
-                        le("module.exports=", node, file.fileName);
+                        le("module.exports=", node, file);
                         bindModuleExportsAssignment(node as BindablePropertyAssignmentExpression);
                         break;
                     case AssignmentDeclarationKind.PrototypeProperty:
-                        le("C.prototype.p=", node, file.fileName);
+                        le("C.prototype.p=", node, file);
                         bindPrototypePropertyAssignment("f.g.h.C.prototype.p=", (node as BindableStaticPropertyAssignmentExpression).left, node);
                         break;
                     case AssignmentDeclarationKind.Prototype:
-                        le("C.prototype=", node, file.fileName);
+                        le("C.prototype=", node, file);
                         bindPrototypeAssignment(node as BindableStaticPropertyAssignmentExpression);
                         break;
                     case AssignmentDeclarationKind.ThisProperty:
-                        le("this.p=", node, file.fileName);
+                        le("this.p=", node, file);
                         bindThisPropertyAssignment(node as BindablePropertyAssignmentExpression);
                         break;
                     case AssignmentDeclarationKind.Property:
@@ -2935,7 +2935,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                         if (isInJSFile(node) && isIdentifier(expression)) {
                             const symbol = lookupSymbolForName(blockScopeContainer, expression.escapedText);
                             if (isThisInitializedDeclaration(symbol?.valueDeclaration)) {
-                                le("that.p=", node, file.fileName);
+                                le("that.p=", node, file);
                                 bindThisPropertyAssignment(node as BindablePropertyAssignmentExpression);
                                 break;
                             }
@@ -3024,13 +3024,13 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 const assignmentKind = getAssignmentDeclarationKind(node as CallExpression);
                 switch (assignmentKind) {
                     case AssignmentDeclarationKind.ObjectDefinePropertyValue:
-                        le("Object.defineProperty(o, p)", node, file.fileName);
+                        le("Object.defineProperty(o, p)", node, file);
                         return bindObjectDefinePropertyAssignment(node as BindableObjectDefinePropertyCall);
                     case AssignmentDeclarationKind.ObjectDefinePropertyExports:
-                        le("Object.defineProperty(module.exports, p)", node, file.fileName);
+                        le("Object.defineProperty(module.exports, p)", node, file);
                         return bindObjectDefinePropertyExport(node as BindableObjectDefinePropertyCall);
                     case AssignmentDeclarationKind.ObjectDefinePrototypeProperty:
-                        le("Object.defineProperty(C.prototype, p)", node, file.fileName);
+                        le("Object.defineProperty(C.prototype, p)", node, file);
                         return bindObjectDefinePrototypeProperty(node as BindableObjectDefinePropertyCall);
                     case AssignmentDeclarationKind.None:
                         break; // Nothing to do
@@ -3224,7 +3224,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         const symbol = forEachIdentifierInEntityName(node.arguments[0], /*parent*/ undefined, (id, symbol) => {
             if (multiple) {
                 multiple = undefined;
-                le("Object.defineProperty(o.p.q.r, p)", node, file.fileName);
+                le("Object.defineProperty(o.p.q.r, p)", node, file);
             }
             else if (multiple === false) {
                 multiple = true;
@@ -3250,7 +3250,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         const symbol = forEachIdentifierInEntityName(node.left.expression, /*parent*/ undefined, (id, symbol) => {
             if (multiple) {
                 multiple = undefined;
-                le("module.exports.p.q.r=", node, file.fileName);
+                le("module.exports.p.q.r=", node, file);
             }
             else if (multiple === false) {
                 multiple = true;
@@ -3263,7 +3263,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         if (symbol) {
             const isAlias = isAliasableExpression(node.right) && (isExportsIdentifier(node.left.expression) || isModuleExportsAccessExpression(node.left.expression));
             if (isAlias) {
-                le("module.exports.p=alias", node, file.fileName);
+                le("module.exports.p=alias", node, file);
             }
             const flags = isAlias ? SymbolFlags.Alias : SymbolFlags.Property | SymbolFlags.ExportValue;
             setParent(node.left, node);
@@ -3281,16 +3281,16 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         }
         const assignedExpression = getRightMostAssignedExpression(node.right);
         if (isEmptyObjectLiteral(assignedExpression)) {
-            le("module.exports={}", node, file.fileName);
+            le("module.exports={}", node, file);
             return;
         }
         if (container === file && isExportsOrModuleExportsOrAlias(file, assignedExpression)) {
-            le("mod=module.exports=", node, file.fileName);
+            le("mod=module.exports=", node, file);
             return;
         }
 
         if (isObjectLiteralExpression(assignedExpression) && every(assignedExpression.properties, isShorthandPropertyAssignment)) {
-            le("module.exports={a,b,c}", node, file.fileName);
+            le("module.exports={a,b,c}", node, file);
             forEach(assignedExpression.properties, bindExportAssignedObjectMemberAlias);
             return;
         }
@@ -3300,7 +3300,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             ? SymbolFlags.Alias // An export= with an EntityNameExpression or a ClassExpression exports all meanings of that identifier or class
             : SymbolFlags.Property | SymbolFlags.ExportValue | SymbolFlags.ValueModule;
         if (flags === SymbolFlags.Alias) {
-            le("module.exports=alias", node, file.fileName);
+            le("module.exports=alias", node, file);
         }
         const symbol = declareSymbol(file.symbol.exports!, file.symbol, node, flags | SymbolFlags.Assignment, SymbolFlags.None);
         setValueDeclaration(symbol, node);
@@ -3336,7 +3336,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                     constructorSymbol.members = constructorSymbol.members || createSymbolTable();
                     // It's acceptable for multiple 'this' assignments of the same identifier to occur
                     if (hasDynamicName(node)) {
-                        le("this[x]=", node, file.fileName);
+                        le("this[x]=", node, file);
                         bindDynamicallyNamedThisPropertyAssignment(node, constructorSymbol, constructorSymbol.members);
                     }
                     else {
@@ -3357,7 +3357,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 const containingClass = thisContainer.parent;
                 const symbolTable = isStatic(thisContainer) ? containingClass.symbol.exports! : containingClass.symbol.members!;
                 if (hasDynamicName(node)) {
-                    le("this[x]=", node, file.fileName);
+                    le("this[x]=", node, file);
                     bindDynamicallyNamedThisPropertyAssignment(node, containingClass.symbol, symbolTable);
                 }
                 else {
@@ -3370,11 +3370,11 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                     break;
                 }
                 else if (thisContainer.commonJsModuleIndicator) {
-                    le("this.p=--module", node, file.fileName);
+                    le("this.p=--module", node, file);
                     declareSymbol(thisContainer.symbol.exports!, thisContainer.symbol, node, SymbolFlags.Property | SymbolFlags.ExportValue, SymbolFlags.None);
                 }
                 else {
-                    le("this.p=--global", node, file.fileName);
+                    le("this.p=--global", node, file);
                     declareSymbolAndAddToSymbolTable(node, SymbolFlags.FunctionScopedVariable, SymbolFlags.FunctionScopedVariableExcludes);
                 }
                 break;
@@ -3399,16 +3399,16 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 
     function bindSpecialPropertyDeclaration(node: PropertyAccessExpression | LiteralLikeElementAccessExpression) {
         if (node.expression.kind === SyntaxKind.ThisKeyword) {
-            le("/** @type */this.p", node, file.fileName);
+            le("/** @type */this.p", node, file);
             bindThisPropertyAssignment(node);
         }
         else if (isBindableStaticAccessExpression(node) && node.parent.parent.kind === SyntaxKind.SourceFile) {
             if (isPrototypeAccess(node.expression)) {
-                le("/** @type */C.prototype.p", node, file.fileName);
+                le("/** @type */C.prototype.p", node, file);
                 bindPrototypePropertyAssignment("/** @type */x.y.C.prototype.p", node, node.parent);
             }
             else {
-                le("/** @type */f.p", node, file.fileName);
+                le("/** @type */f.p", node, file);
                 bindStaticPropertyAssignment("/** @type */f.g.h.p", node);
             }
         }
@@ -3472,17 +3472,17 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             // This can be an alias for the 'exports' or 'module.exports' names, e.g.
             //    var util = module.exports;
             //    util.property = function ...
-            le("mod=module.exports.p=", node, file.fileName);
+            le("mod=module.exports.p=", node, file);
             bindExportsPropertyAssignment(node as BindableStaticPropertyAssignmentExpression);
         }
         else if (hasDynamicName(node)) {
-            le("f[x]=", node, file.fileName);
+            le("f[x]=", node, file);
             bindAnonymousDeclaration(node, SymbolFlags.Property | SymbolFlags.Assignment, InternalSymbolName.Computed);
             const sym = bindPotentiallyMissingNamespaces("f.g.h[x]=", parentSymbol, node.left.expression, isTopLevelNamespaceAssignment(node.left), /*isPrototypeProperty*/ false, /*containerIsClass*/ false);
             addLateBoundAssignmentDeclarationToSymbol(node, sym);
         }
         else {
-            le("f.p=", node, file.fileName);
+            le("f.p=", node, file);
             bindStaticPropertyAssignment("f.g.h.p=", cast(node.left, isBindableStaticNameExpression));
         }
     }
@@ -3509,7 +3509,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             namespaceSymbol = forEachIdentifierInEntityName(entityName, namespaceSymbol, (id, symbol, parent) => {
                 if (multiple) {
                     multiple = undefined;
-                    le(type, entityName, file.fileName);
+                    le(type, entityName, file);
                 }
                 else if (multiple === false) {
                     multiple = true;
@@ -3556,7 +3556,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                     return !!id && isIdentifier(id) && idText(id) === "set";
                 })
             ) {
-                le("Object.defineProperty(o, p, {set})", declaration, file.fileName);
+                le("Object.defineProperty(o, p, {set})", declaration, file);
                 // We mix in `SymbolFLags.Property` so in the checker `getTypeOfVariableParameterOrProperty` is used for this
                 // symbol, instead of `getTypeOfAccessor` (which will assert as there is no real accessor declaration)
                 includes |= SymbolFlags.SetAccessor | SymbolFlags.Property;
@@ -3568,7 +3568,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                     return !!id && isIdentifier(id) && idText(id) === "get";
                 })
             ) {
-                le("Object.defineProperty(o, p, {get})", declaration, file.fileName);
+                le("Object.defineProperty(o, p, {get})", declaration, file);
                 includes |= SymbolFlags.GetAccessor | SymbolFlags.Property;
                 excludes |= SymbolFlags.GetAccessorExcludes;
             }
@@ -3622,7 +3622,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         if (init) {
             const isPrototypeAssignment = isPrototypeAccess(isVariableDeclaration(node!) ? node.name : isBinaryExpression(node!) ? node.left : node!);
             if (isBinaryExpression(init) && (init.operatorToken.kind === SyntaxKind.BarBarToken || init.operatorToken.kind === SyntaxKind.QuestionQuestionToken)) {
-                le("x = x || e", errnode, file.fileName);
+                le("x = x || e", errnode, file);
             }
             return !!getExpandoInitializer(isBinaryExpression(init) && (init.operatorToken.kind === SyntaxKind.BarBarToken || init.operatorToken.kind === SyntaxKind.QuestionQuestionToken) ? init.right : init, isPrototypeAssignment);
         }
@@ -3728,7 +3728,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 !(getCombinedModifierFlags(node) & ModifierFlags.Export)
             ) {
                 if (node.initializer && getLeftmostAccessExpression(node.initializer) !== node.initializer) {
-                    le("require('x').y", node, file.fileName);
+                    le("require('x').y", node, file);
                 }
                 declareSymbolAndAddToSymbolTable(node as Declaration, SymbolFlags.Alias, SymbolFlags.AliasExcludes);
             }

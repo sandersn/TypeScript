@@ -4437,7 +4437,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const right = name.kind === SyntaxKind.QualifiedName ? name.right : name.name;
             let namespace = resolveEntityName(left, namespaceMeaning, ignoreErrors, /*dontResolveAlias*/ false, location);
             if (namespace && namespaceMeaning & SymbolFlags.Value && namespace.flags & SymbolFlags.Value) {
-                le("js{}-qua-namespace", name, getSourceFileOfNode(name).fileName);
+                le("js{}-qua-namespace", name, getSourceFileOfNode(name));
             }
             if (!namespace || nodeIsMissing(right)) {
                 return undefined;
@@ -4598,7 +4598,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (init) {
             const initSymbol = getSymbolOfNode(init);
             if (initSymbol) {
-                le("getExpandoSymbol--merge", decl, getSourceFileOfNode(decl).fileName);
+                le("getExpandoSymbol--merge", decl, getSourceFileOfNode(decl));
                 return mergeJSSymbols(initSymbol, symbol);
             }
         }
@@ -4907,7 +4907,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             getSymbolLinks(merged).resolvedExports = undefined;
             getSymbolLinks(merged).resolvedMembers = undefined;
         }
-        le("module.exports=+module.exports.p=", exported.valueDeclaration!, getSourceFileOfNode(moduleSymbol.valueDeclaration!).fileName);
+        le("module.exports=+module.exports.p=", exported.valueDeclaration!, getSourceFileOfNode(moduleSymbol.valueDeclaration!));
         getSymbolLinks(merged).cjsExportMerged = merged;
         return links.cjsExportMerged = merged;
     }
@@ -11392,7 +11392,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         setParent(reference.expression, reference);
         setParent(reference, file);
         reference.flowNode = file.endFlowNode;
-        le("module.exports.flow=2x", symbol.declarations![0], file.fileName);
+        le("module.exports.flow=2x", symbol.declarations![0], file);
         return getFlowTypeOfReference(reference, autoType, undefinedType);
     }
 
@@ -11508,7 +11508,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const sourceTypes = some(constructorTypes, t => !!(t.flags & ~TypeFlags.Nullable)) ? constructorTypes : types; // TODO: GH#18217
                 if (sourceTypes!.length > 1) {
                     const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations.find(d => !!d);
-                    if (decl) le("union-multiple-assignment-decls", decl, getSourceFileOfNode(decl).fileName);
+                    if (decl) le("union-multiple-assignment-decls", decl, getSourceFileOfNode(decl));
                 }
                 type = getUnionType(sourceTypes!);
             }
@@ -11540,7 +11540,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             mergeSymbolTable(exports, s.exports);
         }
         if (multiple) {
-            le("getJSContainerObjectType.propertyAccess", decl, getSourceFileOfNode(decl).fileName);
+            le("getJSContainerObjectType.propertyAccess", decl, getSourceFileOfNode(decl));
         }
         const type = createAnonymousType(symbol, exports, emptyArray, emptyArray, emptyArray);
         type.objectFlags |= ObjectFlags.JSLiteral;
@@ -12160,7 +12160,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (expando) {
                 const merged = mergeJSSymbols(symbol, expando);
                 if (merged) {
-                    le("getTypeOfFuncClassEnumModule--merge", symbol.valueDeclaration!, getSourceFileOfNode(symbol.valueDeclaration!).fileName);
+                    le("getTypeOfFuncClassEnumModule--merge", symbol.valueDeclaration!, getSourceFileOfNode(symbol.valueDeclaration!));
                     // note:we overwrite links because we just cloned the symbol
                     symbol = merged;
                     links = merged.links;
@@ -12194,7 +12194,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (!popTypeResolution()) {
                     return reportCircularityError(symbol);
                 }
-                le("module.exports-usage?", declaration, declaration.fileName);
+                le("module.exports-usage?", declaration, declaration);
                 return type;
             }
         }
@@ -12835,7 +12835,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const kind = symbol.flags & SymbolFlags.Class ? ObjectFlags.Class : ObjectFlags.Interface;
             const merged = mergeJSSymbols(symbol, symbol.valueDeclaration && getAssignedClassSymbol(symbol.valueDeclaration));
             if (merged) {
-                le("getDeclaredTypeOfClassOrInterface--merge", symbol.valueDeclaration!, getSourceFileOfNode(symbol.valueDeclaration!).fileName);
+                le("getDeclaredTypeOfClassOrInterface--merge", symbol.valueDeclaration!, getSourceFileOfNode(symbol.valueDeclaration!));
                 // note:we overwrite links because we just cloned the symbol
                 symbol = merged;
                 links = merged.links;
@@ -15519,9 +15519,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             for (let i = numTypeArguments; i < numTypeParameters; i++) {
                 let defaultType = getDefaultFromTypeParameter(typeParameters![i]);
                 if (isJavaScriptImplicitAny && defaultType && (isTypeIdenticalTo(defaultType, unknownType) || isTypeIdenticalTo(defaultType, emptyObjectType))) {
-                    const loc = typeArguments?.length ? typeArguments[0].symbol.valueDeclaration : typeParameters![i].symbol.valueDeclaration;
+                    const loc = typeArguments?.length ? typeArguments[0].symbol?.valueDeclaration : typeParameters![i].symbol?.valueDeclaration;
                     if (loc) {
-                        le("fillMissingTypeArguments--JS", loc, getSourceFileOfNode(loc).fileName);
+                        le("fillMissingTypeArguments--JS", loc, getSourceFileOfNode(loc));
                     }
                     else {
                         console.error(JSON.stringify({ type: "fillMissingTypeArguments--JS", position: { start: 0, end: 0 }, fileName: "unknown.ts" }));
@@ -15663,7 +15663,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             parameters.pop();
         }
         parameters.push(syntheticArgsSymbol);
-        le("arguments...typed", declaration, getSourceFileOfNode(declaration).fileName);
+        le("arguments...typed", declaration, getSourceFileOfNode(declaration));
         return true;
     }
 
@@ -16557,7 +16557,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (symbol.flags & SymbolFlags.Value && isJSDocTypeReference(node)) {
             const jsdocType = getTypeFromJSDocValueReference(node, symbol);
             if (jsdocType) {
-                le("jsValue-qua-type", node, getSourceFileOfNode(node).fileName);
+                le("jsValue-qua-type", node, getSourceFileOfNode(node));
                 return jsdocType;
             }
             else {
@@ -16703,27 +16703,27 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const typeArgs = node.typeArguments;
             switch (node.typeName.escapedText) {
                 case "String":
-                    le("String", node, getSourceFileOfNode(node).fileName);
+                    le("String", node, getSourceFileOfNode(node));
                     checkNoTypeArguments(node);
                     return stringType;
                 case "Number":
-                    le("Number", node, getSourceFileOfNode(node).fileName);
+                    le("Number", node, getSourceFileOfNode(node));
                     checkNoTypeArguments(node);
                     return numberType;
                 case "Boolean":
-                    le("Boolean", node, getSourceFileOfNode(node).fileName);
+                    le("Boolean", node, getSourceFileOfNode(node));
                     checkNoTypeArguments(node);
                     return booleanType;
                 case "Void":
-                    le("Void", node, getSourceFileOfNode(node).fileName);
+                    le("Void", node, getSourceFileOfNode(node));
                     checkNoTypeArguments(node);
                     return voidType;
                 case "Undefined":
-                    le("Undefined", node, getSourceFileOfNode(node).fileName);
+                    le("Undefined", node, getSourceFileOfNode(node));
                     checkNoTypeArguments(node);
                     return undefinedType;
                 case "Null":
-                    le("Null", node, getSourceFileOfNode(node).fileName);
+                    le("Null", node, getSourceFileOfNode(node));
                     checkNoTypeArguments(node);
                     return nullType;
                 case "Function":
@@ -16731,10 +16731,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     checkNoTypeArguments(node);
                     return globalFunctionType;
                 case "array":
-                    le("array", node, getSourceFileOfNode(node).fileName);
+                    le("array", node, getSourceFileOfNode(node));
                     return (!typeArgs || !typeArgs.length) && !noImplicitAny ? anyArrayType : undefined;
                 case "promise":
-                    le("promise", node, getSourceFileOfNode(node).fileName);
+                    le("promise", node, getSourceFileOfNode(node));
                     return (!typeArgs || !typeArgs.length) && !noImplicitAny ? createPromiseType(anyType) : undefined;
                 case "Object":
                     if (typeArgs && typeArgs.length === 2) {
@@ -16742,14 +16742,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             const indexed = getTypeFromTypeNode(typeArgs[0]);
                             const target = getTypeFromTypeNode(typeArgs[1]);
                             const indexInfo = indexed === stringType || indexed === numberType ? [createIndexInfo(indexed, target, /*isReadonly*/ false)] : emptyArray;
-                            le("Object.<K,V>", node, getSourceFileOfNode(node).fileName);
+                            le("Object.<K,V>", node, getSourceFileOfNode(node));
                             return createAnonymousType(/*symbol*/ undefined, emptySymbols, emptyArray, emptyArray, indexInfo);
                         }
-                        le("Object", node, getSourceFileOfNode(node).fileName);
+                        le("Object", node, getSourceFileOfNode(node));
                         return anyType;
                     }
                     checkNoTypeArguments(node);
-                    if (!noImplicitAny) le("Object", node, getSourceFileOfNode(node).fileName);
+                    if (!noImplicitAny) le("Object", node, getSourceFileOfNode(node));
                     return !noImplicitAny ? anyType : undefined;
             }
         }
@@ -34272,7 +34272,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (!(indexInfo && indexInfo.type)) {
                 const isUncheckedJS = isUncheckedJSSuggestion(node, leftType.symbol, /*excludeClasses*/ true);
                 if (!isUncheckedJS && isJSLiteralType(leftType)) {
-                    le("jsliteral.undefined", node, getSourceFileOfNode(node).fileName);
+                    le("jsliteral.undefined", node, getSourceFileOfNode(node));
                     return anyType;
                 }
                 if (leftType.symbol === globalThisSymbol) {
@@ -37902,7 +37902,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             if (minArgumentCount === undefined) {
                 if (!strongArityForUntypedJS && signature.flags & SignatureFlags.IsUntypedSignatureInJSFile) {
-                    if (signature.declaration) le("JS-weak-arity", signature.declaration, getSourceFileOfNode(signature.declaration).fileName);
+                    if (signature.declaration) le("JS-weak-arity", signature.declaration, getSourceFileOfNode(signature.declaration));
                     return 0;
                 }
                 minArgumentCount = signature.minArgumentCount;
@@ -41474,7 +41474,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     : isFunctionExpression(node) ? "/** @type */function-expr"
                     : isArrowFunction(node) ? "/** @type */arrow"
                     : "/** @type */other";
-                le(type, node, getSourceFileOfNode(node).fileName);
+                le(type, node, getSourceFileOfNode(node));
                 const signature = getSignatureOfTypeTag(node);
                 if (signature && signature.declaration) {
                     returnTypeNode = getEffectiveReturnTypeNode(signature.declaration);
