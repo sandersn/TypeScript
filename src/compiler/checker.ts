@@ -4436,7 +4436,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const left = name.kind === SyntaxKind.QualifiedName ? name.left : name.expression;
             const right = name.kind === SyntaxKind.QualifiedName ? name.right : name.name;
             let namespace = resolveEntityName(left, namespaceMeaning, ignoreErrors, /*dontResolveAlias*/ false, location);
-            if (namespace && namespaceMeaning & SymbolFlags.Value && namespace.flags & SymbolFlags.Value) {
+            if (namespace && isInJSFile(name) && namespace.flags & SymbolFlags.Value && !(namespace.flags & SymbolFlags.ValueModule) && !(namespace.flags & SymbolFlags.Enum)) {
                 le("js{}-qua-namespace", name, getSourceFileOfNode(name));
             }
             if (!namespace || nodeIsMissing(right)) {
@@ -4898,7 +4898,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             merged.exports = createSymbolTable();
         }
         moduleSymbol.exports!.forEach((s, name) => {
-            if (name === InternalSymbolName.ExportEquals) return;
+            if (name === InternalSymbolName.ExportEquals) {
+                if (moduleSymbol.exports!.size > 1) le("module.exports=+module.exports.p=", exported.valueDeclaration!, getSourceFileOfNode(moduleSymbol.valueDeclaration!));
+                return;
+            }
             merged.exports!.set(name, merged.exports!.has(name) ? mergeSymbol(merged.exports!.get(name)!, s) : s);
         });
         if (merged === exported) {
@@ -4907,7 +4910,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             getSymbolLinks(merged).resolvedExports = undefined;
             getSymbolLinks(merged).resolvedMembers = undefined;
         }
-        le("module.exports=+module.exports.p=", exported.valueDeclaration!, getSourceFileOfNode(moduleSymbol.valueDeclaration!));
         getSymbolLinks(merged).cjsExportMerged = merged;
         return links.cjsExportMerged = merged;
     }
@@ -15648,6 +15650,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (lastParamVariadicType) {
             // Parameter has effective annotation, lock in type
             syntheticArgsSymbol.links.type = createArrayType(getTypeFromTypeNode(lastParamVariadicType.type));
+            le("arguments...typed", declaration, getSourceFileOfNode(declaration));
         }
         else {
             // Parameter has no annotation
@@ -15663,7 +15666,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             parameters.pop();
         }
         parameters.push(syntheticArgsSymbol);
-        le("arguments...typed", declaration, getSourceFileOfNode(declaration));
         return true;
     }
 
@@ -41470,13 +41472,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             let returnTypeErrorLocation = returnTypeNode;
 
             if (isInJSFile(node)) {
-                const type = isFunctionDeclaration(node) ? "/** @type */function-decl"
-                    : isFunctionExpression(node) ? "/** @type */function-expr"
-                    : isArrowFunction(node) ? "/** @type */arrow"
-                    : "/** @type */other";
-                le(type, node, getSourceFileOfNode(node));
                 const signature = getSignatureOfTypeTag(node);
                 if (signature && signature.declaration) {
+                    const type = isFunctionDeclaration(node) ? "/** @type */function-decl"
+                        : isFunctionExpression(node) ? "/** @type */function-expr"
+                        : isArrowFunction(node) ? "/** @type */arrow"
+                        : "/** @type */other";
+                    le(type, node, getSourceFileOfNode(node));
                     returnTypeNode = getEffectiveReturnTypeNode(signature.declaration);
                     returnTypeErrorLocation = getJSDocTypeTag(node)!.typeExpression.type;
                 }
